@@ -4,6 +4,7 @@
 }
 
 .site-header {
+  --header-font-size: 32px;
   height: 100px;
   display: flex;
   align-items: center;
@@ -12,9 +13,11 @@
 }
 
 .wordmark {
-  font-weight: 900;
-  font-size: 26px;
+  font-family: 'Be Vietnam', sans-serif;
+  font-weight: 500;
+  font-size: var(--header-font-size);
   letter-spacing: -.06em;
+  word-spacing: .25em;
 }
 
 .wordmark sup {
@@ -25,19 +28,33 @@
 
 .site-header nav {
   display: flex;
-  gap: clamp(24px, 4vw, 100px);
-  font-size: 26px;
-  font-weight: 600;
+  gap: clamp(32px, 6vw, 120px);
+  font-family: 'Be Vietnam', sans-serif;
+  font-weight: 500;
+  font-size: var(--header-font-size);
+  line-height: 40px;
 }
 
 .site-header nav a {
-  padding-block: 12px;
+  padding-inline: 12px;
+  margin-inline: -12px;
   white-space: nowrap;
-  transition: color .25s;
+  transition: color .25s, background-color .25s;
+}
+
+.site-header nav a span {
+  display: inline-block;
+  /* Optically center Be Vietnam capitals within the unchanged link background. */
+  transform: translateY(-.115em);
 }
 
 .site-header nav a:hover {
   color: #d4bbff;
+}
+
+.site-header nav a[aria-current='location'] {
+  color: #000;
+  background-color: #fff;
 }
 
 .header-mark {
@@ -194,7 +211,7 @@
     transform: translate(40px, -40px);
   }
 
-  .avatar-stage:hover ~ .hero-contact .contact-image-button {
+  .avatar-stage:hover~.hero-contact .contact-image-button {
     transform: rotate(-10deg);
     box-shadow: 0 0 8px #ffffffe6, 0 0 24px #ffffffa6, 0 0 48px #ffffff59;
   }
@@ -967,12 +984,14 @@
   }
 }
 
-@media (max-width: 680px), (max-width: 1000px) and (hover: none) and (pointer: coarse) {
+@media (max-width: 680px),
+(max-width: 1000px) and (hover: none) and (pointer: coarse) {
   .shell {
     width: 90%;
   }
 
   .site-header {
+    --header-font-size: 19px;
     height: auto;
     min-height: 74px;
     flex-wrap: wrap;
@@ -980,22 +999,18 @@
     padding-block: 8px;
   }
 
-  .wordmark {
-    font-size: 19px;
-  }
-
   .site-header nav {
     width: 100%;
     justify-content: space-between;
-    gap: 8px;
-    font-size: 14px;
+    gap: 12px;
   }
 
   .site-header nav a {
     display: flex;
     align-items: center;
-    min-height: 44px;
-    padding-block: 4px;
+    justify-content: center;
+    min-height: 40px;
+    padding: 2px 12px 1px;
   }
 
   .header-mark {
@@ -1399,16 +1414,19 @@
 }
 
 @media (max-width: 360px) {
+  .site-header {
+    --header-font-size: 16px;
+  }
+
   .site-header nav {
-    gap: 6px;
-    font-size: 12px;
+    gap: 8px;
   }
 
 }
 
 @media (prefers-reduced-motion: reduce) {
 
-  .avatar-stage:hover ~ .hero-contact .contact-image-button,
+  .avatar-stage:hover~.hero-contact .contact-image-button,
   .avatar-stage:hover .avatar-image,
   .avatar-image {
     transform: none;

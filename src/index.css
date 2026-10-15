@@ -1,4 +1,12 @@
 @font-face {
+  font-family: 'Be Vietnam';
+  src: url('/fonts/be-vietnam-medium.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'BBH Hegarty';
   src: url('/fonts/bbh-hegarty.ttf') format('truetype');
   font-style: normal;

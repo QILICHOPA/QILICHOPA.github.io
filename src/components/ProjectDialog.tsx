@@ -8,9 +8,13 @@ export function ProjectDialog({ project, onClose }: { project: Project | null; o
     const dialog = ref.current
     if (!dialog || !project) return
     dialog.showModal()
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { dialog.close(); document.body.style.overflow = previous }
+    const scrollArea = document.getElementById('main')
+    const previous = scrollArea?.style.overflow
+    if (scrollArea) scrollArea.style.overflow = 'hidden'
+    return () => {
+      dialog.close()
+      if (scrollArea) scrollArea.style.overflow = previous ?? ''
+    }
   }, [project])
 
   return (

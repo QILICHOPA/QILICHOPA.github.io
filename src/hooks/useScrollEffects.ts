@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 
 export function useScrollEffects() {
   useEffect(() => {
+    const scrollArea = document.getElementById('main')
+    if (!scrollArea) return
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
     let stop = () => {}
 
@@ -16,32 +18,55 @@ export function useScrollEffects() {
             observer.unobserve(entry.target)
           }
         })
-      }, { threshold: 0.08 })
+      }, { root: scrollArea, threshold: 0.08 })
       document.querySelectorAll('.reveal').forEach((element) => observer.observe(element))
       document.documentElement.classList.add('motion-ready')
 
       const cards = Array.from(document.querySelectorAll<HTMLElement>('.stack-card'))
+      const opening = document.querySelector<HTMLElement>('.opening-sequence')
+      const intro = document.getElementById('intro')
+      const clamp = (value: number) => Math.min(1, Math.max(0, value))
+      let lastOpeningProgress = -1
+      opening?.classList.add('is-motion-ready')
       let frame = 0
       const update = () => {
-        const startAt = window.innerHeight * 0.7
+        const viewportTop = scrollArea.getBoundingClientRect().top
+        const viewportHeight = scrollArea.clientHeight
+        if (opening && intro) {
+          // The second panel moves in normal document flow over the sticky first
+          // screen. Derive all visual phases from its actual viewport position.
+          const progress = clamp(1 - (intro.getBoundingClientRect().top - viewportTop) / viewportHeight)
+          if (progress !== lastOpeningProgress) {
+            opening.style.setProperty('--opening-progress', progress.toFixed(4))
+            opening.style.setProperty('--intro-title-progress', clamp((progress - 0.04) / 0.36).toFixed(4))
+            opening.style.setProperty('--intro-avatar-progress', clamp((progress - 0.18) / 0.48).toFixed(4))
+            opening.style.setProperty('--intro-copy-progress', clamp((progress - 0.38) / 0.46).toFixed(4))
+            lastOpeningProgress = progress
+          }
+        }
+        const startAt = viewportTop + viewportHeight * 0.7
         cards.forEach((card, index) => {
           const next = cards[index + 1]
-          const progress = next ? Math.min(1, Math.max(0, (startAt - next.getBoundingClientRect().top) / Math.max(1, startAt - 130))) : 0
+          const progress = next ? Math.min(1, Math.max(0, (startAt - next.getBoundingClientRect().top) / Math.max(1, startAt - viewportTop - 130))) : 0
           card.style.setProperty('--stack-progress', String(progress))
         })
         frame = 0
       }
       const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
-      window.addEventListener('scroll', schedule, { passive: true })
+      scrollArea.addEventListener('scroll', schedule, { passive: true })
       window.addEventListener('resize', schedule)
       update()
 
       stop = () => {
         observer.disconnect()
-        window.removeEventListener('scroll', schedule)
+        scrollArea.removeEventListener('scroll', schedule)
         window.removeEventListener('resize', schedule)
         cancelAnimationFrame(frame)
         document.documentElement.classList.remove('motion-ready')
+        opening?.classList.remove('is-motion-ready')
+        for (const property of ['--opening-progress', '--intro-title-progress', '--intro-avatar-progress', '--intro-copy-progress']) {
+          opening?.style.removeProperty(property)
+        }
         cards.forEach((card) => card.style.removeProperty('--stack-progress'))
       }
     }

@@ -3,39 +3,52 @@ import { ChromeStar } from './components/ChromeStar'
 import { ContactForm } from './components/ContactForm'
 import { ProjectCard } from './components/ProjectCard'
 import { ProjectDialog } from './components/ProjectDialog'
+import { KeychainHero } from './components/KeychainHero'
 import { asset, gallery, profile, projects, services, testimonials } from './data/portfolio'
 import type { Project } from './data/portfolio'
 import { useScrollEffects } from './hooks/useScrollEffects'
 import { useFitHeadline } from './hooks/useFitHeadline'
+import { useOpeningScroll } from './hooks/useOpeningScroll'
+import { navigationItems, useActiveNavigation } from './hooks/useActiveNavigation'
 import './App.css'
+import './components/OpeningTransition.css'
 
 function App() {
   const [openService, setOpenService] = useState<number | null>(0)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [paused, setPaused] = useState(false)
+  const { activeId, selectTab } = useActiveNavigation()
   useScrollEffects()
+  useOpeningScroll()
   useFitHeadline(profile.name)
 
   return (
     <>
       <a className="skip-link" href="#main">跳转到主要内容</a>
-      <header className="site-header shell">
-        <a className="wordmark" href="#home" aria-label="返回首页">{profile.name.toUpperCase()}<sup>®</sup></a>
-        <nav aria-label="主导航"><a href="#about">关于我</a><a href="#customers">作品集锦</a><a href="#projects">个人项目</a><a href="#contact">与我联系</a></nav>
-        <span className="header-mark" aria-hidden="true">✳</span>
+      <header className="site-header entry-header shell">
+        <a className="wordmark" href="#home" aria-label="返回首页">{profile.name.toUpperCase()} WORKSPACE</a>
+        <nav aria-label="主导航">{navigationItems.map(({ id, label }) => <a key={id} href={`#${id}`} aria-current={activeId === id ? 'location' : undefined} onClick={() => selectTab(id)}><span>{label}</span></a>)}</nav>
       </header>
+      <main id="main" tabIndex={-1}>
+        <div id="home" className="opening-sequence">
+          <div className="opening-pin">
+            <div className="opening-visual">
+              <KeychainHero />
+            </div>
+          </div>
+          <section id="intro" className="intro-panel" aria-labelledby="hero-title">
+            <div className="hero shell">
+              <h2 id="hero-title">HI, I'M {profile.name.toUpperCase()}</h2>
+              <div className="hero-side hero-copy"><p>{profile.introduction}</p></div>
 
-      <main id="main">
-        <section id="home" className="hero shell" aria-labelledby="hero-title">
-          <h1 id="hero-title">HI, I'M {profile.name.toUpperCase()}</h1>
-          <div className="hero-side hero-copy"><p>{profile.introduction}</p></div>
-
-          <div className="avatar-stage"><div className="avatar-float"><img className="avatar-image" src={profile.avatar} alt="创作者的三维风格头像" width="1254" height="1254" fetchPriority="high" /></div></div>
-          <div className="hero-side hero-contact"><a className="contact-image-button" href="#contact"><img src={asset('contact-button.png')} alt="CONTACT ME" width="340" height="96" /></a></div>
-          {/* <div className="hero-bottom"><a href="#playground" className="scroll-down" aria-label="向下浏览作品">↓</a></div> */}
-        </section>
+              <div className="avatar-stage"><div className="intro-avatar-reveal"><div className="avatar-float"><img className="avatar-image" src={profile.avatar} alt="创作者的三维风格头像" width="1254" height="1254" loading="lazy" /></div></div></div>
+              <div className="hero-side hero-contact"><a className="contact-image-button" href="#contact"><img src={asset('contact-button.png')} alt="CONTACT ME" width="340" height="96" /></a></div>
+            </div>
+          </section>
+        </div>
 
         <section id="playground" className="playground shell" aria-label="作品视觉拼贴">
+          <div className="section-kicker reveal"><span>VISUAL PLAYGROUND</span><span>一些视觉实验</span></div>
           <div className="gallery-grid">{gallery.map((image, index) => <div className="gallery-tile reveal" key={`${image.src}-${index}`}><img src={image.src} alt={image.alt} style={{ objectPosition: image.position }} loading="lazy" width="700" height="500" /></div>)}</div>
         </section>
 
