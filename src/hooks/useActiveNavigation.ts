@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 
 export const navigationItems = [
-  { id: 'intro', label: 'HOME' },
+  { id: 'home', label: 'HOME' },
   { id: 'about', label: 'ABOUT' },
-  { id: 'projects', label: 'WORKS' },
+  { id: 'works', label: 'WORKS' },
   { id: 'contact', label: 'CONTACT' },
 ] as const
 
 type NavigationId = typeof navigationItems[number]['id']
 
 export function useActiveNavigation() {
-  const [activeId, setActiveId] = useState<NavigationId>('intro')
+  const [activeId, setActiveId] = useState<NavigationId>('home')
   const pending = useRef<{ id: NavigationId; until: number } | null>(null)
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function useActiveNavigation() {
       }
 
       const current = atBottom ? sections.at(-1) : sections.filter(({ top }) => top <= threshold).at(-1)
-      setActiveId(current?.id ?? 'intro')
+      setActiveId(current?.id ?? 'home')
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
     scrollArea.addEventListener('scroll', schedule, { passive: true })

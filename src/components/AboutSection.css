@@ -186,6 +186,90 @@
   padding-left: .15em;
 }
 
+@media (min-width: 1001px) {
+  .about-section {
+    height: calc(100dvh - var(--site-nav-height));
+    min-height: 0;
+    padding-block: min(5.4vw, 7svh, 104px) min(8vw, 7svh, 154px);
+  }
+}
+
+/* Give the experience more width and reduce spacing on laptop screens. */
+@media (min-width: 1001px) and (max-height: 900px) {
+  .about-section {
+    padding-block: clamp(16px, 3svh, 27px);
+  }
+
+  .about-layout {
+    grid-template-columns: minmax(0, 40fr) minmax(0, 60fr);
+  }
+
+  .about-visual {
+    padding-left: 3vw;
+  }
+
+  .about-copy h2 {
+    font-size: clamp(30px, 4.8svh, 43px);
+    margin-bottom: 12px;
+  }
+
+  .about-profile {
+    font-size: clamp(16px, 2.4svh, 20px);
+    line-height: 1.5;
+  }
+
+  .about-experience-title {
+    font-size: clamp(28px, 4.2svh, 38px);
+    margin-block: 8px 12px;
+  }
+
+  .about-job {
+    font-size: clamp(12px, 1.82svh, 14px);
+  }
+
+  .about-job-heading {
+    font-size: clamp(14px, 2.1svh, 18px);
+  }
+
+  .about-portrait {
+    width: min(100%, 22.5vw, 40svh);
+  }
+
+  .about-toolbox {
+    margin-top: clamp(24px, 4svh, 36px);
+  }
+}
+
+@media (min-width: 1001px) and (max-height: 650px) {
+  .about-section {
+    padding-block: 16px;
+  }
+
+  .about-copy h2 {
+    margin-bottom: 8px;
+  }
+
+  .about-experience-title {
+    margin-block: 6px 8px;
+  }
+
+  .about-job-heading {
+    margin-bottom: 4px;
+  }
+
+  .about-job + .about-job {
+    margin-top: 8px;
+  }
+}
+
+/* Extremely short windows retain readable text and normal scrolling. */
+@media (min-width: 1001px) and (max-height: 599px) {
+  .about-section {
+    height: auto;
+    min-height: calc(100dvh - var(--site-nav-height));
+  }
+}
+
 @media (max-width: 1000px) {
   .about-section {
     padding-block: 48px 80px;

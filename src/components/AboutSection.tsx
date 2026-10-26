@@ -37,7 +37,7 @@ const experience = [
 
 export function AboutSection() {
   return (
-    <section id="about" className="about-section" aria-labelledby="about-title">
+    <section className="about-section" aria-labelledby="about-title">
       <div className="about-layout shell">
         <div className="about-visual">
           <div className="about-portrait">

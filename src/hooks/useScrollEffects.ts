@@ -27,17 +27,24 @@ export function useScrollEffects() {
       const intro = document.getElementById('intro')
       const introPanel = document.querySelector<HTMLElement>('.intro-panel')
       const about = document.getElementById('about')
+      const aboutPanel = document.querySelector<HTMLElement>('.about-section')
+      const works = document.getElementById('works')
       const clamp = (value: number) => Math.min(1, Math.max(0, value))
       let lastOpeningProgress = -1
       let lastAboutProgress = -1
+      let lastWorksProgress = -1
       const updatePinOffset = () => {
-        if (introPanel) {
+        for (const { panel, property } of [
+          { panel: introPanel, property: '--intro-pin-top' },
+          { panel: aboutPanel, property: '--about-pin-top' },
+        ]) {
           // A tall panel scrolls to its bottom before it becomes pinned.
-          introPanel.style.setProperty('--intro-pin-top', `${Math.min(0, scrollArea.clientHeight - introPanel.offsetHeight)}px`)
+          panel?.style.setProperty(property, `${Math.min(0, scrollArea.clientHeight - panel.offsetHeight)}px`)
         }
       }
       const panelObserver = new ResizeObserver(updatePinOffset)
       if (introPanel) panelObserver.observe(introPanel)
+      if (aboutPanel) panelObserver.observe(aboutPanel)
       panelObserver.observe(scrollArea)
       updatePinOffset()
       opening?.classList.add('is-motion-ready')
@@ -67,6 +74,16 @@ export function useScrollEffects() {
             lastAboutProgress = progress
           }
         }
+        if (opening && works) {
+          const progress = clamp(1 - (works.getBoundingClientRect().top - viewportTop) / viewportHeight)
+          if (progress !== lastWorksProgress) {
+            opening.style.setProperty('--works-progress', progress.toFixed(4))
+            for (const [index, key] of ['pad', 'mobile', 'web', 'motion'].entries()) {
+              opening.style.setProperty(`--works-${key}-progress`, clamp((progress - .08 - index * .08) / .52).toFixed(4))
+            }
+            lastWorksProgress = progress
+          }
+        }
         const startAt = viewportTop + viewportHeight * 0.7
         cards.forEach((card, index) => {
           const next = cards[index + 1]
@@ -84,12 +101,13 @@ export function useScrollEffects() {
         observer.disconnect()
         panelObserver.disconnect()
         introPanel?.style.removeProperty('--intro-pin-top')
+        aboutPanel?.style.removeProperty('--about-pin-top')
         scrollArea.removeEventListener('scroll', schedule)
         window.removeEventListener('resize', schedule)
         cancelAnimationFrame(frame)
         document.documentElement.classList.remove('motion-ready')
         opening?.classList.remove('is-motion-ready')
-        for (const property of ['--opening-progress', '--intro-title-progress', '--intro-avatar-progress', '--intro-copy-progress', '--about-progress', '--about-title-progress', '--about-portrait-progress', '--about-copy-progress']) {
+        for (const property of ['--opening-progress', '--intro-title-progress', '--intro-avatar-progress', '--intro-copy-progress', '--about-progress', '--about-title-progress', '--about-portrait-progress', '--about-copy-progress', '--works-progress', '--works-pad-progress', '--works-mobile-progress', '--works-web-progress', '--works-motion-progress']) {
           opening?.style.removeProperty(property)
         }
         cards.forEach((card) => card.style.removeProperty('--stack-progress'))

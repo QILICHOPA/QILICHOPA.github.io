@@ -5,11 +5,12 @@ import { ProjectCard } from './components/ProjectCard'
 import { ProjectDialog } from './components/ProjectDialog'
 import { KeychainHero } from './components/KeychainHero'
 import { AboutSection } from './components/AboutSection'
+import { WorksSection } from './components/WorksSection'
 import { asset, gallery, profile, projects, testimonials } from './data/portfolio'
 import type { Project } from './data/portfolio'
 import { useScrollEffects } from './hooks/useScrollEffects'
 import { useFitHeadline } from './hooks/useFitHeadline'
-import { useOpeningScroll } from './hooks/useOpeningScroll'
+import { useDesktopPageScroll } from './hooks/useDesktopPageScroll'
 import { navigationItems, useActiveNavigation } from './hooks/useActiveNavigation'
 import './App.css'
 import './components/OpeningTransition.css'
@@ -19,7 +20,7 @@ function App() {
   const [paused, setPaused] = useState(false)
   const { activeId, selectTab } = useActiveNavigation()
   useScrollEffects()
-  useOpeningScroll()
+  useDesktopPageScroll()
   useFitHeadline(profile.name)
 
   return (
@@ -46,7 +47,10 @@ function App() {
                 <div className="hero-side hero-contact"><a className="contact-image-button" href="#contact"><img src={asset('contact-button.png')} alt="CONTACT ME" width="340" height="96" /></a></div>
               </div>
             </section>
-            <AboutSection />
+            <div id="about" className="about-stage">
+              <AboutSection />
+              <WorksSection />
+            </div>
           </div>
         </div>
 

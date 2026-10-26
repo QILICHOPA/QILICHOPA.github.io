@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Desktop page scroll regression checks</title>
+<style>
+  body { margin: 20px; background: #161616; color: #eee; font: 15px system-ui; }
+  button { padding: 10px 20px; }
+  pre { white-space: pre-wrap; }
+  iframe { width: 1366px; height: 768px; border: 1px solid #555; }
+</style>
+<h1>Desktop page scroll regression checks</h1>
+<p>Runs timed synthetic wheel streams through the real app, including its event listeners and animation frames.</p>
+<button id="run">Run scroll checks</button>
+<pre id="results" aria-live="polite">Ready</pre>
+<iframe id="preview" src="/" title="Portfolio under test"></iframe>
+<script type="module">
+  const preview = document.getElementById('preview')
+  const results = document.getElementById('results')
+  const run = document.getElementById('run')
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+  const lines = []
+
+  async function check(name, events, expectedPages, width = 1366, targetSelector = '#main') {
+    preview.style.width = `${width}px`
+    const doc = preview.contentDocument
+    const win = preview.contentWindow
+    if (!win.matchMedia('(min-width: 1001px) and (pointer: fine)').matches) throw new Error('A desktop pointer is required')
+    const main = doc.getElementById('main')
+    win.dispatchEvent(new Event('hashchange'))
+    main.scrollTo({ top: 0, behavior: 'instant' })
+    await wait(100)
+    const height = main.clientHeight
+    const positions = []
+    const sampler = setInterval(() => positions.push(main.scrollTop), 20)
+    const start = performance.now()
+    let prevented = 0
+    for (const [at, delta] of events) {
+      await wait(Math.max(0, start + at - performance.now()))
+      const event = new win.WheelEvent('wheel', { deltaY: delta, bubbles: true, cancelable: true })
+      doc.querySelector(targetSelector).dispatchEvent(event)
+      if (event.defaultPrevented) prevented++
+    }
+    await wait(1000)
+    clearInterval(sampler)
+    const expected = height * expectedPages
+    const actual = main.scrollTop
+    const drift = Math.max(...positions.slice(-30)) - Math.min(...positions.slice(-30))
+    const passed = Math.abs(expected - actual) <= 2 && drift <= 1 && prevented === events.length &&
+      (expectedPages !== 1 || Math.max(...positions) <= expected + 2)
+    lines.push(`${passed ? 'PASS' : 'FAIL'} ${name}: final=${actual}, expected=${expected}, final drift=${drift}, canceled=${prevented}/${events.length}`)
+    results.textContent = lines.join('\n')
+    if (!passed) throw new Error(name)
+  }
+
+  run.addEventListener('click', async () => {
+    run.disabled = true
+    lines.length = 0
+    results.textContent = 'Running…'
+    try {
+      await preview.contentDocument.fonts.ready
+      const longTail = Array.from({ length: 151 }, (_, i) => [i * 20, Math.max(.2, 90 * Math.exp(-i * 20 / 350))])
+      await check('3-second inertia stays on the first destination', longTail, 1)
+      await check('two separate swipes advance exactly two pages', [[0, 60], [100, 20], [200, 3], [900, 60], [1000, 20], [1100, 3]], 2)
+      await check('input during animation is never queued for later', [[0, 60], [300, 60], [320, 30], [340, 10]], 1)
+      await check('intentional reversal during animation returns to the first page', [[0, 60], [200, -40], [300, -15], [400, -3]], 0)
+      await check('small reverse bounce cannot start another turn', [[0, 60], [100, 20], [200, 4], [300, 2], [400, -1], [500, 2], [600, 1], [700, 3], [800, 2], [900, -1], [1000, 1]], 1)
+      await check('1440px header input and long inertia stay on one page', longTail, 1, 1440, 'header')
+      lines.push('ALL CHECKS PASSED')
+    } catch (error) {
+      lines.push(`ERROR: ${error.message}`)
+    } finally {
+      results.textContent = lines.join('\n')
+      run.disabled = false
+    }
+  })
+</script>
+</html>
