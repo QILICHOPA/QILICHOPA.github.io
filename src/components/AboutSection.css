@@ -1,0 +1,275 @@
+.about-section {
+  min-height: calc(100svh - var(--site-nav-height));
+  padding-block: clamp(64px, 5.4vw, 104px) clamp(80px, 8vw, 154px);
+  background: #000;
+  color: #fff;
+  scroll-margin-top: -20px;
+}
+
+.about-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
+  align-items: start;
+}
+
+.about-visual {
+  padding-top: clamp(24px, 2.3vw, 44px);
+  padding-left: 5vw;
+  padding-right: 40px;
+}
+
+.about-portrait {
+  position: relative;
+  width: min(100%, 22.5vw, 432px);
+  aspect-ratio: 432 / 455;
+  isolation: isolate;
+}
+
+.about-portrait img {
+  position: absolute;
+  height: auto;
+}
+
+.about-folder-back {
+  z-index: 0;
+  top: 26.8%;
+  left: 0;
+  width: 98.38%;
+}
+
+.about-portrait-photo {
+  z-index: 1;
+  top: 0;
+  left: 16.2%;
+  width: 66.44%;
+  transform-origin: 50% 85%;
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+}
+
+.about-folder-front {
+  z-index: 2;
+  bottom: 0;
+  right: 0;
+  width: 94.44%;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .about-portrait:hover .about-portrait-photo {
+    transform: translate(4%, -7%) rotate(4deg);
+  }
+}
+
+.about-toolbox {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: clamp(40px, 3.65vw, 70px);
+}
+
+.about-tools {
+  display: flex;
+  gap: clamp(9px, .7vw, 14px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-tools li {
+  width: clamp(36px, 3.1vw, 60px);
+  flex: none;
+  text-align: center;
+}
+
+.about-tools img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 22%;
+}
+
+.about-tools li span {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(7px, .5vw, 10px);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.about-tools-more {
+  padding-bottom: 1px;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.about-copy {
+  max-width: 860px;
+}
+
+.about-copy h2 {
+  font-size: clamp(38px, 3.125vw, 60px);
+  font-weight: 400;
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.about-profile {
+  font-size: clamp(18px, 1.25vw, 24px);
+  line-height: 1.7;
+}
+
+.about-profile a:hover {
+  color: #e994ff;
+}
+
+.about-experience-title {
+  margin-block: 8px 14px;
+  color: #000;
+  -webkit-text-stroke: 1px #fff;
+  font-size: clamp(34px, 2.81vw, 54px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.025em;
+}
+
+.about-job {
+  position: relative;
+  padding-left: clamp(25px, 1.85vw, 36px);
+  font-size: clamp(14px, .833vw, 16px);
+  line-height: 1.45;
+}
+
+.about-job + .about-job {
+  margin-top: 10px;
+}
+
+.about-job::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: clamp(13px, .94vw, 18px);
+  aspect-ratio: 1;
+  background: #f58aff;
+}
+
+.about-job:nth-child(2)::before {
+  background: #b65afa;
+}
+
+.about-job-heading {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: clamp(18px, 1.85vw, 36px);
+  row-gap: 4px;
+  margin: 0 0 6px;
+  font-size: clamp(16px, 1.04vw, 20px);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.about-job-period {
+  white-space: nowrap;
+}
+
+.about-job-divider {
+  color: #b7b7b7;
+  font-weight: 400;
+}
+
+.about-job ol {
+  margin: 0;
+  padding-left: 1.5em;
+}
+
+.about-job li {
+  padding-left: .15em;
+}
+
+@media (max-width: 1000px) {
+  .about-section {
+    padding-block: 48px 80px;
+  }
+
+  .about-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 44px;
+  }
+
+  .about-visual {
+    padding: 0;
+    justify-self: center;
+  }
+
+  .about-portrait {
+    width: min(68vw, 360px);
+    margin-inline: auto;
+  }
+
+  .about-toolbox {
+    justify-content: center;
+    margin-top: 32px;
+    gap: 8px;
+  }
+
+  .about-tools {
+    gap: clamp(8px, 2vw, 14px);
+  }
+
+  .about-tools li {
+    width: clamp(32px, 8vw, 48px);
+  }
+
+  .about-tools li span {
+    font-size: clamp(6px, 1.6vw, 8px);
+  }
+
+  .about-tools-more {
+    font-size: 8px;
+  }
+
+  .about-copy {
+    width: 100%;
+    max-width: 680px;
+    justify-self: center;
+  }
+
+  .about-copy h2 {
+    font-size: clamp(36px, 7vw, 54px);
+    margin-bottom: 16px;
+  }
+
+  .about-profile {
+    font-size: clamp(16px, 3.6vw, 22px);
+  }
+
+  .about-experience-title {
+    margin-block: 20px 16px;
+    font-size: clamp(32px, 6vw, 44px);
+  }
+
+  .about-job {
+    padding-left: 25px;
+    line-height: 1.7;
+  }
+
+  .about-job-heading {
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .about-job::before {
+    left: 0;
+    top: 5px;
+  }
+
+  .about-job + .about-job {
+    margin-top: 28px;
+  }
+
+  .about-job li + li {
+    margin-top: 6px;
+  }
+}

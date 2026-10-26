@@ -4,7 +4,8 @@ import { ContactForm } from './components/ContactForm'
 import { ProjectCard } from './components/ProjectCard'
 import { ProjectDialog } from './components/ProjectDialog'
 import { KeychainHero } from './components/KeychainHero'
-import { asset, gallery, profile, projects, services, testimonials } from './data/portfolio'
+import { AboutSection } from './components/AboutSection'
+import { asset, gallery, profile, projects, testimonials } from './data/portfolio'
 import type { Project } from './data/portfolio'
 import { useScrollEffects } from './hooks/useScrollEffects'
 import { useFitHeadline } from './hooks/useFitHeadline'
@@ -14,7 +15,6 @@ import './App.css'
 import './components/OpeningTransition.css'
 
 function App() {
-  const [openService, setOpenService] = useState<number | null>(0)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [paused, setPaused] = useState(false)
   const { activeId, selectTab } = useActiveNavigation()
@@ -36,30 +36,23 @@ function App() {
               <KeychainHero />
             </div>
           </div>
-          <section id="intro" className="intro-panel" aria-labelledby="hero-title">
-            <div className="hero shell">
-              <h2 id="hero-title">HI, I'M {profile.name.toUpperCase()}</h2>
-              <div className="hero-side hero-copy"><p>{profile.introduction}</p></div>
+          <div id="intro" className="intro-stage">
+            <section className="intro-panel" aria-labelledby="hero-title">
+              <div className="hero shell">
+                <h2 id="hero-title">HI, I'M {profile.name.toUpperCase()}</h2>
+                <div className="hero-side hero-copy"><p>{profile.introduction}</p></div>
 
-              <div className="avatar-stage"><div className="intro-avatar-reveal"><div className="avatar-float"><img className="avatar-image" src={profile.avatar} alt="创作者的三维风格头像" width="1254" height="1254" loading="lazy" /></div></div></div>
-              <div className="hero-side hero-contact"><a className="contact-image-button" href="#contact"><img src={asset('contact-button.png')} alt="CONTACT ME" width="340" height="96" /></a></div>
-            </div>
-          </section>
+                <div className="avatar-stage"><div className="intro-avatar-reveal"><div className="avatar-float"><img className="avatar-image" src={profile.avatar} alt="创作者的三维风格头像" width="1254" height="1254" loading="lazy" /></div></div></div>
+                <div className="hero-side hero-contact"><a className="contact-image-button" href="#contact"><img src={asset('contact-button.png')} alt="CONTACT ME" width="340" height="96" /></a></div>
+              </div>
+            </section>
+            <AboutSection />
+          </div>
         </div>
 
         <section id="playground" className="playground shell" aria-label="作品视觉拼贴">
           <div className="section-kicker reveal"><span>VISUAL PLAYGROUND</span><span>一些视觉实验</span></div>
           <div className="gallery-grid">{gallery.map((image, index) => <div className="gallery-tile reveal" key={`${image.src}-${index}`}><img src={image.src} alt={image.alt} style={{ objectPosition: image.position }} loading="lazy" width="700" height="500" /></div>)}</div>
-        </section>
-
-        <section id="about" className="services-section light-panel" aria-labelledby="services-title">
-          <div className="shell"><p className="eyebrow reveal">我能为你做什么</p><h2 id="services-title" className="display-title reveal">设计服务</h2>
-            <div className="service-list">{services.map((service, index) => <div className={`service-item ${openService === index ? 'is-open' : ''} reveal`} key={service.title}>
-              <h3><button className="service-toggle" aria-expanded={openService === index} aria-controls={`service-${index}`} onClick={() => setOpenService(openService === index ? null : index)}><span className="service-number">{String(index + 1).padStart(2, '0')}</span><span className="service-name">{service.title}</span><span className="service-summary">{service.summary}</span><span className="service-plus" aria-hidden="true">{openService === index ? '−' : '+'}</span></button></h3>
-              <div id={`service-${index}`} className="service-detail" hidden={openService !== index}><p>{service.detail}</p><div className="service-tags">{service.tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div>
-            </div>)}</div>
-            <div className="about-line reveal"><span className="about-symbol" aria-hidden="true">✳</span><p>{profile.about}</p><a className="simple-link" href="#contact">一起创作 ↗</a></div>
-          </div>
         </section>
 
         <section id="projects" className="projects-section shell" aria-labelledby="projects-title">

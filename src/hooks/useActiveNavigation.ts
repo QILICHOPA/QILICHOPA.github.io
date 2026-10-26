@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 
 export const navigationItems = [
   { id: 'intro', label: 'HOME' },
-  { id: 'projects', label: 'WORKS' },
   { id: 'about', label: 'ABOUT' },
+  { id: 'projects', label: 'WORKS' },
   { id: 'contact', label: 'CONTACT' },
 ] as const
 

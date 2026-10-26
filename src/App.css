@@ -1,5 +1,5 @@
 .shell {
-  width: 80%;
+  width: 90%;
   margin-inline: auto;
 }
 
@@ -78,8 +78,16 @@
 
 .hero {
   position: relative;
-  min-height: max(700px, calc(min(100svh, 1080px) - 100px));
-  padding-top: 30px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: clamp(20px, 2vw, 32px);
+  align-items: start;
+  padding-block: 30px 24px;
+}
+
+.hero > * {
+  min-width: 0;
 }
 
 .display-title,
@@ -92,17 +100,18 @@
 }
 
 #hero-title {
+  grid-column: 1 / -1;
+  grid-row: 1;
   width: 100%;
   text-align: center;
-  height: 240px;
   background: linear-gradient(180deg, rgba(210, 193, 255, 1) 0%, rgba(239, 212, 212, 1) 100%);
   -webkit-background-clip: text !important;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   font-family: 'BBH Hegarty', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-weight: 400;
-  font-size: 180px;
-  line-height: 240px;
+  font-size: clamp(64px, 12vw, 180px);
+  line-height: 1.1;
   white-space: nowrap;
   position: relative;
   z-index: 1;
@@ -110,18 +119,19 @@
 }
 
 .hero-side {
-  position: absolute;
-  top: 100px;
+  position: relative;
+  grid-row: 2;
   z-index: 3;
 }
 
 .hero-copy {
-  left: 0;
+  grid-column: 1;
   max-width: 332px;
 }
 
 .hero-copy p {
-  font-size: 20px;
+  font-size: clamp(14px, 1.2vw, 20px);
+  line-height: 1.8;
   max-width: 332px;
 }
 
@@ -134,7 +144,7 @@
 }
 
 .hero-contact {
-  right: 0;
+  grid-column: 3;
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -143,8 +153,9 @@
 
 .contact-image-button {
   display: block;
-  width: 340px;
-  height: 96px;
+  width: min(340px, 100%);
+  height: auto;
+  aspect-ratio: 340 / 96;
   border-radius: 999px;
   box-shadow: 0 0 8px #ffffff00, 0 0 24px #ffffff00, 0 0 48px #ffffff00;
   transform-origin: right center;
@@ -177,12 +188,12 @@
 }
 
 .avatar-stage {
-  position: absolute;
-  left: 50%;
-  bottom: -40px;
-  width: min(100%, 90svh, 1000px);
-  height: min(75svh, 810px);
-  transform: translateX(-50%);
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  justify-self: center;
+  width: min(100%, 60svh, 740px);
+  aspect-ratio: 1;
   z-index: 2;
 }
 
@@ -208,7 +219,7 @@
   }
 
   .avatar-stage:hover .avatar-image {
-    transform: translate(40px, -40px);
+    transform: translate(12px, -12px);
   }
 
   .avatar-stage:hover~.hero-contact .contact-image-button {
@@ -680,8 +691,8 @@
   padding-block: 100px 85px;
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 120px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(40px, 6vw, 120px);
 }
 
 .contact-copy .eyebrow {
@@ -917,10 +928,6 @@
 
 /* Full HD is the largest desktop layout; page content continues vertically. */
 @media (min-width: 1440px) {
-  .hero-side {
-    top: clamp(290px, 22vw, 422px);
-  }
-
   .gallery-grid {
     grid-template-rows: clamp(190px, 14vw, 270px) clamp(210px, 15.5vw, 298px);
   }
@@ -931,23 +938,6 @@
 }
 
 @media (max-width: 1000px) {
-  .hero {
-    min-height: max(620px, calc(min(100svh, 1080px) - 100px));
-    padding-top: 65px;
-  }
-
-  .hero-side {
-    top: 245px;
-  }
-
-  .hero-copy {
-    max-width: 170px;
-  }
-
-  .hero-copy p {
-    font-size: 10px;
-  }
-
   .hero-caption {
     max-width: 150px;
     line-height: 1.8;
@@ -984,14 +974,13 @@
   }
 }
 
-@media (max-width: 680px),
-(max-width: 1000px) and (hover: none) and (pointer: coarse) {
+@media (max-width: 1000px) {
   .shell {
-    width: 90%;
+    width: calc(100% - max(5%, env(safe-area-inset-left, 0px)) - max(5%, env(safe-area-inset-right, 0px)));
   }
 
   .site-header {
-    --header-font-size: 19px;
+    --header-font-size: clamp(14px, 4vw, 19px);
     height: auto;
     min-height: 74px;
     flex-wrap: wrap;
@@ -1013,6 +1002,11 @@
     padding: 2px 12px 1px;
   }
 
+  .wordmark {
+    font-size: 19px;
+    white-space: nowrap;
+  }
+
   .header-mark {
     display: none;
   }
@@ -1026,6 +1020,7 @@
   }
 
   #hero-title {
+    grid-column: 1;
     grid-row: 1;
     height: auto;
     font-size: clamp(40px, 12vw, 80px);
@@ -1033,6 +1028,7 @@
   }
 
   .avatar-stage {
+    grid-column: 1;
     grid-row: 2;
     position: relative;
     left: auto;
@@ -1045,6 +1041,7 @@
   }
 
   .hero-side {
+    grid-column: 1;
     position: relative;
     top: auto;
     bottom: auto;
@@ -1139,7 +1136,7 @@
   }
 
   .display-title {
-    font-size: 17vw;
+    font-size: clamp(48px, 12vw, 116px);
   }
 
   .services-section .display-title {
@@ -1288,7 +1285,7 @@
   }
 
   .feedback-heading .display-title {
-    font-size: 14vw;
+    font-size: clamp(44px, 10vw, 84px);
   }
 
   .testimonial {
@@ -1334,7 +1331,7 @@
   }
 
   .contact-copy .display-title {
-    font-size: 22vw;
+    font-size: clamp(64px, 18vw, 104px);
   }
 
   .chrome-star {
@@ -1397,6 +1394,7 @@
   .project-dialog {
     width: calc(100% - 32px);
     max-height: calc(100dvh - 32px);
+    overscroll-behavior: contain;
   }
 
   .dialog-close {
@@ -1406,6 +1404,11 @@
 
   .dialog-content {
     padding: 50px 22px 24px;
+    overflow-wrap: anywhere;
+  }
+
+  .dialog-content > .eyebrow {
+    padding-right: 42px;
   }
 
   .dialog-description {
@@ -1414,10 +1417,6 @@
 }
 
 @media (max-width: 360px) {
-  .site-header {
-    --header-font-size: 16px;
-  }
-
   .site-header nav {
     gap: 8px;
   }
