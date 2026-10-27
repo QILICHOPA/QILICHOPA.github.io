@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOTION 视频播放检查</title>
+<style>
+  body { margin: 16px; background: #161616; color: #eee; font: 14px system-ui; }
+  button { padding: 8px 12px; margin: 0 8px 8px 0; }
+  pre { white-space: pre-wrap; max-height: 160px; overflow: auto; }
+  iframe { display: block; width: 1366px; height: 768px; border: 0; transform-origin: top left; }
+</style>
+<button id="run">检查视频交互</button>
+<button id="desktop">桌面预览</button>
+<button id="phone">手机预览</button>
+<pre id="results" aria-live="polite">准备就绪</pre>
+<iframe id="preview" src="/#works" title="MOTION 视频预览"></iframe>
+<script type="module">
+  const preview = document.getElementById('preview')
+  const results = document.getElementById('results')
+  const run = document.getElementById('run')
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+  const doc = () => preview.contentDocument
+  const win = () => preview.contentWindow
+  const player = () => doc().querySelector('.works-video-player')
+  const lines = []
+  const assert = (name, success) => {
+    lines.push(`${success ? 'PASS' : 'FAIL'} ${name}`)
+    results.textContent = lines.join('\n')
+    if (!success) throw new Error(name)
+  }
+  async function until(condition) {
+    const start = performance.now()
+    while (!condition()) {
+      if (performance.now() - start > 10000) throw new Error('等待视频状态超时')
+      await wait(50)
+    }
+  }
+  function fit(width, height) {
+    preview.style.width = `${width}px`
+    preview.style.height = `${height}px`
+    preview.style.transform = `scale(${Math.min(1, (innerWidth - 32) / width)})`
+  }
+  async function open() {
+    if (player()) return
+    if (!doc().querySelector('.works-folder-motion.is-expanded')) doc().querySelector('.works-folder-motion .works-folder-toggle').click()
+    await wait(800)
+    doc().getElementById('open-motion-showreel').click()
+    await until(() => player()?.open)
+  }
+  const wheel = target => {
+    const event = new (win().WheelEvent)('wheel', { deltaY: 80, bubbles: true, cancelable: true })
+    target.dispatchEvent(event)
+    return event.defaultPrevented
+  }
+  async function show(width, height) {
+    results.hidden = true
+    fit(width, height)
+    await open()
+    doc().getElementById('works').scrollIntoView({ behavior: 'instant' })
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+  document.getElementById('desktop').onclick = () => show(1920, 1080)
+  document.getElementById('phone').onclick = () => show(390, 844)
+  fit(1366, 768)
+  run.onclick = async () => {
+    run.disabled = true
+    results.hidden = false
+    lines.length = 0
+    try {
+      fit(1366, 768)
+      await open()
+      const video = player().querySelector('video')
+      await until(() => video.readyState >= 1)
+      assert('04 保留两张卡片，其中 SHOWREEL 为视频入口', doc().querySelectorAll('#motion-previews .works-preview').length === 2 && doc().querySelectorAll('#motion-previews button').length === 1 && doc().querySelector('.works-preview-motion-compilation'))
+      assert('视频元数据正确且默认不自动播放', video.videoWidth === 1280 && video.videoHeight === 720 && Math.abs(video.duration - 63.04) < 1 && video.paused)
+      const controls = player().querySelector('.works-video-controls')
+      const controlsStyle = () => win().getComputedStyle(controls)
+      const pointer = (target, type, pointerType = 'mouse') => target.dispatchEvent(new (win().PointerEvent)(type, { bubbles: true, pointerType }))
+      await wait(2800)
+      assert('闲置后隐藏底部控件', controlsStyle().opacity === '0' && controlsStyle().pointerEvents === 'none')
+      pointer(player(), 'pointermove')
+      await until(() => controlsStyle().opacity === '1')
+      assert('鼠标移动显示透明控件', controlsStyle().opacity === '1' && controlsStyle().backgroundColor === 'rgba(0, 0, 0, 0)' && controlsStyle().backgroundImage === 'none')
+      await wait(2800)
+      assert('鼠标停留时闲置仍会隐藏', controlsStyle().opacity === '0')
+      pointer(player(), 'pointerdown', 'touch')
+      await until(() => controlsStyle().opacity === '1')
+      assert('触摸显示底部控件', controlsStyle().opacity === '1')
+      const seekControl = player().querySelector('input')
+      player().dispatchEvent(new (win().KeyboardEvent)('keydown', { key: 'Tab', bubbles: true }))
+      seekControl.focus()
+      await wait(2800)
+      assert('键盘聚焦进度条时保持控件可见', controlsStyle().opacity === '1')
+      pointer(seekControl, 'pointerdown', 'touch')
+      await wait(2800)
+      assert('拖动进度条时保持控件可见', controlsStyle().opacity === '1')
+      pointer(win(), 'pointercancel', 'touch')
+      await wait(2800)
+      assert('结束触摸拖动后自动隐藏', controlsStyle().opacity === '0')
+      const edge = doc().querySelector('img.works-detail-folder-edge')
+      await edge.decode()
+      assert('使用提供的紫色底部切图', edge.src.endsWith('/motion-detail-edge.png') && edge.naturalWidth === 3840 && edge.naturalHeight === 253)
+      assert('普通播放器不阻止图片外翻屏', wheel(doc().querySelector('.works-detail-side')))
+      await wait(700)
+      doc().getElementById('works').scrollIntoView({ behavior: 'instant' })
+      const top = doc().getElementById('main').scrollTop
+      assert('视频内滚动独立', !wheel(video))
+      await wait(100)
+      assert('视频内滚动不带动主网页', Math.abs(top - doc().getElementById('main').scrollTop) < 2)
+      player().querySelector('.works-video-toggle').click()
+      await until(() => video.currentTime > .1)
+      assert('点击可播放并同步时间', !video.paused && player().classList.contains('is-playing'))
+      player().querySelector('.works-video-toggle').click()
+      await wait(50)
+      assert('可暂停播放', video.paused && !player().classList.contains('is-playing'))
+      const slider = player().querySelector('input')
+      Object.getOwnPropertyDescriptor(win().HTMLInputElement.prototype, 'value').set.call(slider, '20')
+      slider.dispatchEvent(new (win().Event)('input', { bubbles: true }))
+      await until(() => Math.abs(video.currentTime - 20) < .2)
+      assert('进度条可定位至指定时间', Math.abs(Number(slider.value) - 20) < .2)
+      player().querySelector('.works-video-toggle').click()
+      await until(() => !video.paused)
+      player().querySelector('.works-video-expand').click()
+      await wait(150)
+      assert('播放中放大保持连续播放', !video.paused && player().querySelector('video') === video)
+      pointer(player(), 'pointermove')
+      await wait(2800)
+      assert('放大播放时控件也会自动隐藏', controlsStyle().opacity === '0')
+      player().querySelector('.works-video-return').click()
+      await wait(50)
+      assert('播放中缩小保持连续播放', !video.paused)
+      player().querySelector('.works-video-toggle').click()
+      await until(() => video.paused)
+      Object.getOwnPropertyDescriptor(win().HTMLInputElement.prototype, 'value').set.call(slider, '20')
+      slider.dispatchEvent(new (win().Event)('input', { bubbles: true }))
+      await until(() => Math.abs(video.currentTime - 20) < .2)
+      for (const [width, height] of [[1920, 1080], [1920, 720], [1920, 600], [1920, 480], [1366, 768], [390, 844], [390, 600], [768, 844]]) {
+        fit(width, height)
+        await wait(100)
+        doc().getElementById('works').scrollIntoView({ behavior: 'instant', block: 'start' })
+        await wait(50)
+        assert(`${width}×${height} 普通布局不横向溢出`, doc().documentElement.scrollWidth <= width && doc().getElementById('main').scrollWidth <= width)
+        const videoRect = video.getBoundingClientRect()
+        const playerRect = player().getBoundingClientRect()
+        const copyright = doc().querySelector('.works-video-copyright')
+        const footerRect = copyright.getBoundingClientRect()
+        assert(`${width}×${height} 视频区域保持 16:9`, videoRect.width > 0 && Math.abs(videoRect.width / videoRect.height - 16 / 9) < .01)
+        const edgeRect = edge.getBoundingClientRect()
+        const colorTop = edgeRect.top + edgeRect.height * .3
+        assert(`${width}×${height} 视频底部紧贴色块`, Math.abs(colorTop - playerRect.bottom) < 1)
+        assert(`${width}×${height} 版权绝对定位在黑色区域`, win().getComputedStyle(copyright).position === 'absolute' && !doc().querySelector('.works-video-layout').contains(copyright) && footerRect.bottom <= edgeRect.top + edgeRect.height * .675 - 2)
+        assert(`${width}×${height} 视频、控件与版权不被底边遮挡`, playerRect.bottom <= colorTop + 1 && footerRect.top > playerRect.bottom && footerRect.bottom <= height)
+        assert(`${width}×${height} 版权完整显示`, copyright.textContent === 'Copyright © 2026 张露丹' && footerRect.height > 0)
+        player().querySelector('.works-video-expand').click()
+        await wait(100)
+        assert(`${width}px 放大进入模态顶层`, player().matches(':modal') && player().getBoundingClientRect().width >= width - 2 && player().getBoundingClientRect().height >= height - 2)
+        assert(`${width}px 放大保留同一个视频和播放进度`, player().querySelector('video') === video && Math.abs(video.currentTime - 20) < .2)
+        assert(`${width}px 放大时切换为缩小图标`, player().querySelector('button[aria-label="缩小视频"] .works-video-collapse') && !player().querySelector('.works-video-expand img'))
+        const returnStyle = win().getComputedStyle(player().querySelector('.works-video-return'))
+        assert(`${width}px 放大返回按钮无边框和底色`, returnStyle.backgroundColor === 'rgba(0, 0, 0, 0)' && returnStyle.borderWidth === '0px' && returnStyle.boxShadow === 'none')
+        player().querySelector('.works-video-expand').click()
+        await wait(50)
+        assert(`${width}px 返回普通尺寸且恢复按钮焦点`, player().open && !player().matches(':modal') && doc().activeElement.classList.contains('works-video-expand'))
+        assert(`${width}px 缩小后恢复放大图标`, player().querySelector('button[aria-label="放大视频"] img') && !player().querySelector('.works-video-collapse'))
+      }
+      player().querySelector('.works-video-expand').click()
+      player().dispatchEvent(new (win().KeyboardEvent)('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+      await wait(50)
+      assert('Escape 首次退出放大并保留详情', player()?.open && !player().matches(':modal'))
+      player().querySelector('.works-video-toggle').click()
+      await until(() => !video.paused)
+      doc().getElementById('playground').scrollIntoView({ behavior: 'instant' })
+      await until(() => video.paused)
+      assert('离开 Works 后自动暂停', video.paused)
+      doc().getElementById('works').scrollIntoView({ behavior: 'instant' })
+      player().querySelector('.works-video-toggle').click()
+      await until(() => !video.paused)
+      doc().querySelector('.works-detail-back').click()
+      await wait(50)
+      assert('关闭详情停止音视频并恢复卡片焦点', !player() && video.paused && doc().activeElement.id === 'open-motion-showreel')
+      await open()
+      assert('重新打开从头播放', player().querySelector('video').currentTime === 0)
+      player().dispatchEvent(new (win().KeyboardEvent)('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+      await wait(50)
+      assert('普通模式 Escape 返回文件夹', !player() && doc().querySelector('.works-folder-motion.is-expanded'))
+      lines.push('ALL CHECKS PASSED')
+    } catch (error) {
+      lines.push(`ERROR: ${error.message}`)
+    } finally {
+      results.textContent = lines.join('\n')
+      run.disabled = false
+    }
+  }
+</script>
+</html>

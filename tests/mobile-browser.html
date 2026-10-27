@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOBILE 作品详情浏览检查</title>
+<style>
+  body { margin: 16px; background: #161616; color: #eee; font: 14px system-ui; }
+  button { padding: 8px 12px; margin: 0 8px 8px 0; }
+  pre { white-space: pre-wrap; }
+  iframe { display: block; width: 1366px; height: 768px; border: 0; transform-origin: top left; }
+</style>
+<button id="run">检查两个 MOBILE 项目</button>
+<button id="social">桌面社交项目</button>
+<button id="membership">桌面会员项目</button>
+<button id="phone">手机布局</button>
+<pre id="results" aria-live="polite">准备就绪</pre>
+<iframe id="preview" src="/#works" title="MOBILE 详情预览"></iframe>
+<script type="module">
+  const preview = document.getElementById('preview')
+  const results = document.getElementById('results')
+  const run = document.getElementById('run')
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+  const lines = []
+  const doc = () => preview.contentDocument
+  const win = () => preview.contentWindow
+  const gallery = () => doc().querySelector('.works-detail-gallery')
+  const main = () => doc().getElementById('main')
+  const assert = (name, success) => {
+    lines.push(`${success ? 'PASS' : 'FAIL'} ${name}`)
+    results.textContent = lines.join('\n')
+    if (!success) throw new Error(name)
+  }
+  const wheel = (target, deltaY) => {
+    const event = new (win().WheelEvent)('wheel', { deltaY, bubbles: true, cancelable: true })
+    target.dispatchEvent(event)
+    return event.defaultPrevented
+  }
+  async function closeDetail() {
+    if (gallery()) {
+      doc().querySelector('.works-detail-back').click()
+      await wait(50)
+    }
+  }
+  async function openDetail(key) {
+    await closeDetail()
+    const category = key.startsWith('mobile') ? 'mobile' : 'pad'
+    if (!doc().querySelector(`.works-folder-${category}.is-expanded`)) {
+      doc().querySelector(`.works-folder-${category} .works-folder-toggle`).click()
+      await wait(800)
+    }
+    doc().getElementById(`open-${key}`).click()
+    await wait(100)
+  }
+  function fitPreview(width, height) {
+    preview.style.width = `${width}px`
+    preview.style.height = `${height}px`
+    preview.style.transform = `scale(${Math.min(1, (innerWidth - 32) / width)})`
+  }
+  async function showLayout(key, width, height) {
+    results.hidden = true
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    fitPreview(width, height)
+    await wait(100)
+    await openDetail(key)
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+  document.getElementById('social').onclick = () => showLayout('mobile-social', 1920, 1080)
+  document.getElementById('membership').onclick = () => showLayout('mobile-membership', 1920, 1080)
+  document.getElementById('phone').onclick = () => showLayout('mobile-social', 390, 844)
+  fitPreview(1366, 768)
+  run.onclick = async () => {
+    results.hidden = false
+    run.disabled = true
+    lines.length = 0
+    try {
+      fitPreview(1366, 768)
+      await doc().fonts.ready
+      for (const [key, count, start] of [['mobile-social', 29, 4], ['mobile-membership', 15, 34]]) {
+        await openDetail(key)
+        const images = [...gallery().querySelectorAll('img')]
+        assert(`${key}: 图片数量和数字顺序正确`, images.length === count && images.every((image, i) => image.src.endsWith(`/${String(start + i).padStart(2, '0')}.webp`)))
+        await Promise.all(images.map(image => { image.loading = 'eager'; return image.decode() }))
+        assert(`${key}: 全部图片加载成功且尺寸与原图一致`, images.every(image => image.naturalWidth === Number(image.getAttribute('width')) && image.naturalHeight === Number(image.getAttribute('height'))))
+        assert(`${key}: 左侧分类正确`, doc().getElementById('works-detail-title').textContent === '02MOBILE')
+        const edge = doc().querySelector('img.works-detail-folder-edge')
+        await edge.decode()
+        assert(`${key}: 使用提供的底部切图`, edge.naturalWidth === 3840 && edge.naturalHeight === 253)
+        const position = main().scrollTop
+        for (const offset of [0, 800, gallery().scrollHeight]) {
+          gallery().scrollTo({ top: offset, behavior: 'instant' })
+          assert(`${key}: 图片区位置 ${offset} 不触发主网页翻屏`, !wheel(images[0], 80))
+          await wait(80)
+          assert(`${key}: 主网页保持原位`, Math.abs(main().scrollTop - position) < 2)
+        }
+        assert(`${key}: 末张完整显示在底边上方`, images.at(-1).getBoundingClientRect().bottom <= edge.getBoundingClientRect().top + 2)
+        const copyright = gallery().querySelector('.works-detail-copyright')
+        const footerRect = copyright.getBoundingClientRect()
+        const galleryRect = gallery().getBoundingClientRect()
+        const coloredEdgeTop = edge.getBoundingClientRect().top + edge.getBoundingClientRect().height * (171 / 253)
+        const bottomGap = coloredEdgeTop - footerRect.bottom
+        assert(`${key}: 底部版权文字居中且贴近色块`, copyright.textContent === 'Copyright © 2026 张露丹' && getComputedStyle(copyright).textAlign === 'center' && footerRect.top >= galleryRect.top && bottomGap >= 6 && bottomGap <= 10)
+        assert(`${key}: 到底隐藏向下提示`, doc().querySelector('.works-detail-scroll-hint').dataset.visible === 'false')
+        assert(`${key}: 图片外滚动仍由主网页接管`, wheel(doc().querySelector('.works-detail-side'), 80))
+        await wait(700)
+        const nextTop = main().scrollTop + doc().getElementById('playground').getBoundingClientRect().top - main().getBoundingClientRect().top
+        assert(`${key}: 图片外下滑到下一章节`, Math.abs(main().scrollTop - nextTop) < 2)
+        doc().getElementById('works').scrollIntoView({ behavior: 'instant', block: 'start' })
+        assert(`${key}: 离开再回到章节保留图片位置`, gallery().scrollTop > 800)
+        await closeDetail()
+        assert(`${key}: 返回保留 MOBILE 展开和对应焦点`, doc().querySelector('.works-folder-mobile.is-expanded') && doc().activeElement.id === `open-${key}`)
+        await openDetail(key)
+        assert(`${key}: 重新打开从首张开始`, gallery().scrollTop === 0)
+        gallery().dispatchEvent(new (win().KeyboardEvent)('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+        await wait(50)
+        assert(`${key}: Escape 返回并恢复焦点`, !gallery() && doc().activeElement.id === `open-${key}`)
+      }
+      await openDetail('pad-k12')
+      assert('PAD 回归：28 张图片和原有粉色底边', gallery().querySelectorAll('img').length === 28 && doc().getElementById('works-detail-title').textContent === '01PAD' && doc().querySelector('svg.works-detail-folder-edge'))
+      for (const width of [390, 768]) {
+        fitPreview(width, 844)
+        for (const key of ['mobile-social', 'mobile-membership']) {
+          await openDetail(key)
+          assert(`${width}px ${key}: 没有水平溢出`, doc().documentElement.scrollWidth <= width && main().scrollWidth <= main().clientWidth)
+          assert(`${width}px ${key}: 保持独立滚动`, getComputedStyle(gallery()).overflowY === 'auto' && getComputedStyle(gallery()).overscrollBehaviorY === 'contain')
+        }
+      }
+      await closeDetail()
+      lines.push('ALL CHECKS PASSED')
+    } catch (error) {
+      lines.push(`ERROR: ${error.message}`)
+    } finally {
+      results.textContent = lines.join('\n')
+      run.disabled = false
+    }
+  }
+</script>
+</html>

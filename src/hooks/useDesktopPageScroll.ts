@@ -52,10 +52,14 @@ export function useDesktopPageScroll() {
     }
     const onWheel = (event: WheelEvent) => {
       if (!desktop.matches || event.defaultPrevented || !event.cancelable || event.ctrlKey || event.metaKey ||
-        Math.abs(event.deltaX) > Math.abs(event.deltaY) || event.deltaY === 0 || document.querySelector('dialog[open]')) return
+        Math.abs(event.deltaX) > Math.abs(event.deltaY) || event.deltaY === 0 || document.querySelector('dialog[open]:not([data-inline-video])')) return
       // Textareas and any nested scrollable content keep their own input.
       let element = event.target instanceof Element ? event.target : null
       while (element && element !== area) {
+        if (element.matches('[data-page-scroll="contained"]')) {
+          stop()
+          return
+        }
         if (element.matches('input, textarea, select, [contenteditable]:not([contenteditable="false"])') ||
           (element.scrollHeight > element.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(element).overflowY))) return
         element = element.parentElement
@@ -76,8 +80,8 @@ export function useDesktopPageScroll() {
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (!desktop.matches || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey ||
-        (event.target instanceof Element && event.target.closest('input, textarea, select, button, a, [contenteditable]')) ||
-        document.querySelector('dialog[open]')) return
+        (event.target instanceof Element && event.target.closest('input, textarea, select, button, a, [contenteditable], [data-page-scroll="contained"]')) ||
+        document.querySelector('dialog[open]:not([data-inline-video])')) return
       const keys: Record<string, number> = { ArrowDown: 1, PageDown: 1, ArrowUp: -1, PageUp: -1, ' ': event.shiftKey ? -1 : 1 }
       const keyDirection = keys[event.key]
       if (!keyDirection && event.key !== 'Home' && event.key !== 'End') return

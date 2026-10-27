@@ -1,4 +1,5 @@
 :root {
+  --site-left-inset: max(4%, env(safe-area-inset-left, 0px));
   --site-nav-padding-top: 20px;
   --site-nav-height: calc(86px + var(--site-nav-padding-top));
 }
@@ -195,7 +196,7 @@
   }
 
   .site-header.entry-header {
-    padding-left: max(5%, env(safe-area-inset-left, 0px));
+    padding-left: var(--site-left-inset);
     padding-right: max(5%, env(safe-area-inset-right, 0px));
   }
 

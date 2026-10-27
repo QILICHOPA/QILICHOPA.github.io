@@ -4,6 +4,7 @@
   width: 100%;
   max-width: 1920px;
   padding-inline: 5%;
+  padding-left: var(--site-left-inset);
   padding-block: var(--site-nav-padding-top) 0;
   height: var(--site-nav-height);
   flex-wrap: nowrap;

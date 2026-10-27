@@ -92,14 +92,36 @@
 }
 
 .works-preview {
+  --preview-hover-angle: -3deg;
   position: absolute;
   height: auto;
   max-width: none;
   opacity: 0;
   visibility: hidden;
   transform: translateY(78%);
-  transition: transform .7s cubic-bezier(.22, 1, .36, 1), opacity .18s ease, visibility 0s .7s;
+  transform-origin: 50% 85%;
+  transition: transform .7s cubic-bezier(.22, 1, .36, 1), filter .35s ease, opacity .18s ease, visibility 0s .7s;
   user-select: none;
+}
+
+.works-preview-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.works-preview-link img {
+  width: 100%;
+  height: auto;
+}
+
+.works-folder.is-expanded .works-preview {
+  pointer-events: auto;
+}
+
+.works-preview:nth-child(2) {
+  --preview-hover-angle: 3deg;
 }
 
 .works-preview-pad-k12 {
@@ -166,6 +188,22 @@
 
 .works-folder.is-expanded .works-preview:nth-child(2) {
   transition-delay: .09s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .works-folder.is-expanded .works-preview:hover {
+    z-index: 3;
+    transform: translateY(-6%) rotate(var(--preview-hover-angle));
+    filter: drop-shadow(0 14px 14px #0005);
+    transition-duration: .4s, .35s, .18s, 0s;
+    transition-delay: 0s;
+  }
+}
+
+.works-folder.is-expanded .works-preview-link:focus-visible {
+  z-index: 3;
+  transform: translateY(-6%) rotate(var(--preview-hover-angle));
+  transition-delay: 0s;
 }
 
 /* Match the four supplied slices to the 1920 × 1080 composition. */

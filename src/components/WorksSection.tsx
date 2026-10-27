@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import { asset } from '../data/portfolio'
+import { hasWorksDetail } from '../data/worksDetails'
+import type { WorksDetailKey } from '../data/worksDetails'
+import { WorksProjectDetail } from './WorksProjectDetail'
+import { WorksVideoDetail } from './WorksVideoDetail'
 import './WorksSection.css'
 
 const folders = [
@@ -32,16 +36,33 @@ const folders = [
   },
 ] as const
 
+type DetailKey = WorksDetailKey | 'motion-showreel'
+const hasDetail = (key: string): key is DetailKey => key === 'motion-showreel' || hasWorksDetail(key)
+
 export function WorksSection() {
   const [expandedFolder, setExpandedFolder] = useState<typeof folders[number]['key'] | null>(null)
+  const [selectedProject, setSelectedProject] = useState<DetailKey | null>(null)
+
+  const closeDetail = () => {
+    const triggerId = `open-${selectedProject}`
+    setSelectedProject(null)
+    requestAnimationFrame(() => document.getElementById(triggerId)?.focus({ preventScroll: true }))
+  }
 
   return (
     <section id="works" className="works-section" aria-label="Works 作品分类">
-      <div className="works-folders">
+      {selectedProject === 'motion-showreel' ? <WorksVideoDetail onClose={closeDetail} /> : selectedProject && <WorksProjectDetail key={selectedProject} projectKey={selectedProject} onClose={closeDetail} />}
+      <div className="works-folders" hidden={selectedProject !== null}>
         {folders.map(({ name, key, width, height, previews }, index) => (
           <article className={`works-folder works-folder-${key}${expandedFolder === key ? ' is-expanded' : ''}`} key={key}>
             <div id={`${key}-previews`} className="works-previews" aria-hidden={expandedFolder !== key}>
-              {previews.map(preview => (
+              {previews.map(preview => hasDetail(preview.key) ? (
+                <button id={`open-${preview.key}`} className={`works-preview works-preview-link works-preview-${preview.key}`} key={preview.key} type="button" aria-label={`查看 ${preview.alt}完整作品`} onClick={() => {
+                  if (hasDetail(preview.key)) setSelectedProject(preview.key)
+                }}>
+                  <img src={asset(`works/${preview.key}.png`)} alt={preview.alt} width={preview.width} height={preview.height} draggable={false} />
+                </button>
+              ) : (
                 <img className={`works-preview works-preview-${preview.key}`} key={preview.key} src={asset(`works/${preview.key}.png`)} alt={preview.alt} width={preview.width} height={preview.height} draggable={false} />
               ))}
             </div>

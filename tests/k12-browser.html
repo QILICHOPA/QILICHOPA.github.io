@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K12 作品详情浏览检查</title>
+<style>
+  body { margin: 16px; background: #161616; color: #eee; font: 14px system-ui; }
+  button { padding: 8px 12px; margin: 0 8px 8px 0; }
+  pre { white-space: pre-wrap; }
+  iframe { display: block; width: 1366px; height: 768px; border: 0; transform-origin: top left; }
+</style>
+<button id="run">检查详情和滚动</button>
+<button id="desktop">桌面布局</button>
+<button id="mobile">手机布局</button>
+<pre id="results" aria-live="polite">准备就绪</pre>
+<iframe id="preview" src="/#works" title="作品详情预览"></iframe>
+<script type="module">
+  const preview = document.getElementById('preview')
+  const results = document.getElementById('results')
+  const run = document.getElementById('run')
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+  const lines = []
+  const doc = () => preview.contentDocument
+  const win = () => preview.contentWindow
+  const gallery = () => doc().querySelector('.works-detail-gallery')
+  const main = () => doc().getElementById('main')
+  const assert = (name, success) => {
+    lines.push(`${success ? 'PASS' : 'FAIL'} ${name}`)
+    results.textContent = lines.join('\n')
+    if (!success) throw new Error(name)
+  }
+  const wheel = (target, deltaY) => {
+    const event = new (win().WheelEvent)('wheel', { deltaY, bubbles: true, cancelable: true })
+    target.dispatchEvent(event)
+    return event.defaultPrevented
+  }
+  async function openDetail() {
+    if (!gallery()) {
+      if (!doc().querySelector('.works-folder-pad.is-expanded')) doc().querySelector('.works-folder-pad .works-folder-toggle').click()
+      await wait(800)
+      doc().getElementById('open-pad-k12').click()
+      await wait(100)
+    }
+  }
+  function fitPreview(width, height) {
+    preview.style.width = `${width}px`
+    preview.style.height = `${height}px`
+    preview.style.transform = `scale(${Math.min(1, (innerWidth - 32) / width)})`
+  }
+  async function showLayout(width, height) {
+    fitPreview(width, height)
+    await wait(100)
+    await openDetail()
+    gallery().closest('section').scrollIntoView({ behavior: 'instant', block: 'start' })
+  }
+  document.getElementById('desktop').onclick = () => showLayout(1920, 1080)
+  document.getElementById('mobile').onclick = () => showLayout(390, 844)
+  fitPreview(1366, 768)
+  run.onclick = async () => {
+    run.disabled = true
+    lines.length = 0
+    try {
+      fitPreview(1366, 768)
+      await doc().fonts.ready
+      await openDetail()
+      const images = [...gallery().querySelectorAll('img')]
+      assert('全部 28 张图片按数字顺序排列', images.length === 28 && images[0].src.endsWith('/02.webp') && images.at(-1).src.endsWith('/30.webp') && !images.some(image => image.src.endsWith('/10.webp')))
+      assert('全部图片保留比例与预留尺寸', images.every(image => image.width > 0 && image.getAttribute('width') === '1920' && Number(image.getAttribute('height')) > 0))
+      assert('图片区保持独立滚动', getComputedStyle(gallery()).overflowY === 'auto' && getComputedStyle(gallery()).overscrollBehaviorY === 'contain')
+      const position = main().scrollTop
+      for (const offset of [0, 800, gallery().scrollHeight]) {
+        gallery().scrollTo({ top: offset, behavior: 'instant' })
+        assert(`图片区位置 ${offset} 不触发网页翻屏`, !wheel(gallery().querySelector('img'), 80))
+        await wait(650)
+        assert('主网页位置保持不变', Math.abs(main().scrollTop - position) < 2)
+      }
+      const lastBottom = images.at(-1).getBoundingClientRect().bottom
+      const edgeTop = doc().querySelector('.works-detail-folder-edge').getBoundingClientRect().top
+      assert('最后一张图片完整显示在粉色边缘上方', lastBottom <= edgeTop + 2)
+      assert('在图片外滚动由网页翻屏接管', wheel(doc().querySelector('.works-detail-side'), 80))
+      await wait(700)
+      const playgroundTop = main().scrollTop + doc().getElementById('playground').getBoundingClientRect().top - main().getBoundingClientRect().top
+      assert('图片外下滑对齐网页下一章节', Math.abs(main().scrollTop - playgroundTop) < 2)
+      assert('返回时保留图片浏览位置', gallery().scrollTop > 800)
+      doc().querySelector('.works-detail-back').click()
+      await wait(50)
+      assert('返回恢复 PAD 文件夹和卡片焦点', !gallery() && doc().querySelector('.works-folder-pad.is-expanded') && doc().activeElement.id === 'open-pad-k12')
+      await openDetail()
+      assert('重新打开从首张开始', gallery().scrollTop === 0)
+      const escape = new (win().KeyboardEvent)('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      gallery().dispatchEvent(escape)
+      await wait(50)
+      assert('Escape 可以返回', !gallery())
+      fitPreview(390, 844)
+      await openDetail()
+      assert('手机布局没有水平溢出', doc().documentElement.scrollWidth <= 390 && main().scrollWidth <= main().clientWidth)
+      lines.push('ALL CHECKS PASSED')
+    } catch (error) {
+      lines.push(`ERROR: ${error.message}`)
+    } finally {
+      results.textContent = lines.join('\n')
+      run.disabled = false
+    }
+  }
+</script>
+</html>
