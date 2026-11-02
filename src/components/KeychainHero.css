@@ -432,7 +432,7 @@
     align-items: flex-start;
     justify-content: center;
     flex-wrap: nowrap;
-    gap: 0;
+    gap: 16px;
   }
 
   .site-header.entry-header .wordmark {

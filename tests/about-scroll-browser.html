@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About 手机滚动检查</title>
+<style>
+  body { margin: 16px; background: #161616; color: #eee; font: 14px system-ui; }
+  button { padding: 10px 16px; }
+  pre { white-space: pre-wrap; }
+  iframe { display: block; width: 390px; height: 844px; border: 1px solid #555; }
+</style>
+<button id="run">检查 About 滚动</button>
+<p id="status" role="status">准备就绪</p>
+<pre id="results" aria-live="polite">准备就绪</pre>
+<iframe id="preview" src="/" title="About 滚动预览"></iframe>
+<script type="module">
+  const preview = document.getElementById('preview')
+  const results = document.getElementById('results')
+  const status = document.getElementById('status')
+  const run = document.getElementById('run')
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+  const lines = []
+  const assert = (name, success) => {
+    lines.push(`${success ? 'PASS' : 'FAIL'} ${name}`)
+    results.textContent = lines.join('\n')
+    if (!success) throw new Error(name)
+  }
+  run.onclick = async () => {
+    run.disabled = true
+    status.textContent = '检查中…'
+    lines.length = 0
+    try {
+      const doc = preview.contentDocument
+      const win = preview.contentWindow
+      await doc.fonts.ready
+      const main = doc.getElementById('main')
+      const about = doc.getElementById('about')
+      const panel = doc.querySelector('.about-section')
+      const layout = doc.querySelector('.about-layout')
+      const experience = doc.querySelector('.about-experience')
+      const lastLine = experience.querySelector('article:last-child li:last-child')
+      const works = doc.getElementById('works')
+      const settle = () => new Promise(resolve => win.requestAnimationFrame(() => win.requestAnimationFrame(resolve)))
+      const top = element => main.scrollTop + element.getBoundingClientRect().top - main.getBoundingClientRect().top
+      for (const [width, height] of [[390, 844], [440, 956], [768, 1024], [844, 390]]) {
+        preview.style.width = `${width}px`
+        preview.style.height = `${height}px`
+        await wait(100)
+        const label = `${width}×${height}`
+        main.scrollTo({ top: 0, behavior: 'instant' })
+        await settle()
+        const introStart = top(doc.getElementById('intro'))
+        main.scrollBy({ top: main.clientHeight * 2.4, behavior: 'smooth' })
+        await wait(1000)
+        assert(`${label}: 首次连续下滑停在头像页，不越过到 About (${main.scrollTop}/${introStart})`, Math.abs(main.scrollTop - introStart) <= 2)
+        assert(`${label}: 头像页停稳后 About 完全位于屏幕下方`, about.getBoundingClientRect().top >= main.getBoundingClientRect().bottom - 2)
+        assert(`${label}: About 使用自然文档流`, win.getComputedStyle(panel).position === 'relative')
+        const start = top(about)
+        const end = top(works)
+        let previous = null
+        let followsScroll = true
+        let stableText = true
+        let lastLineReadable = false
+        for (let position = start; position <= end + 120; position += 60) {
+          main.scrollTo({ top: position, behavior: 'instant' })
+          await settle()
+          const y = lastLine.getBoundingClientRect().top
+          const bottom = lastLine.getBoundingClientRect().bottom
+          if (previous && Math.abs(y - previous.y + main.scrollTop - previous.scroll) > 1) followsScroll = false
+          previous = { y, scroll: main.scrollTop }
+          const style = win.getComputedStyle(layout)
+          stableText &&= style.transform === 'none' && style.filter === 'none' && style.opacity === '1' && win.getComputedStyle(experience).transform === 'none'
+          if (y >= main.getBoundingClientRect().top && bottom <= main.getBoundingClientRect().bottom && bottom <= works.getBoundingClientRect().top) lastLineReadable = true
+        }
+        assert(`${label}: 正文到 Works 始终跟随滚动，无吸附或缩放漂移`, followsScroll && stableText)
+        assert(`${label}: 最后一段工作经历完整可见`, lastLineReadable)
+        assert(`${label}: 没有横向溢出`, main.scrollWidth <= main.clientWidth)
+        about.scrollIntoView({ behavior: 'instant', block: 'start' })
+        await settle()
+        assert(`${label}: About 锚点定位准确`, Math.abs(about.getBoundingClientRect().top - main.getBoundingClientRect().top) <= 2)
+      }
+      preview.style.width = '1366px'
+      preview.style.height = '768px'
+      await wait(100)
+      assert('桌面保留 About 吸顶覆盖转场', win.getComputedStyle(panel).position === 'sticky')
+      lines.push('ALL CHECKS PASSED')
+      status.textContent = '全部通过：4 种触屏尺寸、头像页停靠、About 无提前露出、正文滚动、锚点和桌面转场'
+    } catch (error) {
+      lines.push(`ERROR: ${error.message}`)
+      status.textContent = `检查失败：${error.message}`
+    } finally {
+      results.textContent = lines.join('\n')
+      run.disabled = false
+    }
+  }
+  preview.addEventListener('load', () => run.click(), { once: true })
+</script>
+</html>

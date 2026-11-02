@@ -386,31 +386,25 @@
     inset: auto;
     z-index: 3;
     display: none;
-    gap: 8px;
-    padding: 0 16px 20px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 16px;
-    scrollbar-width: thin;
-    scrollbar-color: #0005 transparent;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 0 10px 14px;
   }
 
   .works-folder.is-expanded .works-previews {
-    display: flex;
+    display: grid;
     pointer-events: auto;
   }
 
   .works-section .works-preview {
     position: relative;
     inset: auto;
-    flex: 0 0 82%;
-    align-self: flex-start;
-    width: 82%;
-    max-width: 300px;
+    align-self: start;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
     height: auto;
     margin: 0;
-    scroll-snap-align: start;
     transform: none;
   }
 
@@ -419,6 +413,8 @@
   }
 
   .works-preview:only-child {
+    grid-column: 1 / -1;
+    width: min(100%, 260px);
     margin-inline: auto;
   }
 }

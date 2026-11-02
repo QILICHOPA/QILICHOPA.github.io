@@ -3,6 +3,11 @@ import { asset } from '../data/portfolio'
 import './WorksProjectDetail.css'
 import './WorksVideoDetail.css'
 
+type FullscreenVideo = HTMLVideoElement & {
+  webkitEnterFullscreen?: () => void
+  webkitExitFullscreen?: () => void
+}
+
 const formatTime = (seconds: number) => {
   const time = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0))
   return `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`
@@ -17,6 +22,8 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const seekingRef = useRef(false)
   const keyboardRef = useRef(false)
+  const revealOnlyRef = useRef(false)
+  const fullscreenRef = useRef<'video' | 'player' | null>(null)
   const [controlsVisible, setControlsVisible] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [playing, setPlaying] = useState(false)
@@ -53,15 +60,36 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     const section = detailRef.current?.closest('section')
-    const video = videoRef.current
+    const video = videoRef.current as FullscreenVideo | null
     const player = playerRef.current
+    const fullscreenTarget = player?.parentElement
     section?.scrollIntoView({ behavior: 'instant', block: 'start' })
     player?.show()
     playRef.current?.focus({ preventScroll: true })
     revealControls()
+    const finishFullscreen = () => {
+      fullscreenRef.current = null
+      setExpanded(false)
+      expandRef.current?.focus({ preventScroll: true })
+      revealControls()
+    }
+    const onFullscreenChange = () => {
+      if (fullscreenTarget && document.fullscreenElement === fullscreenTarget) {
+        fullscreenRef.current = 'player'
+        setExpanded(true)
+        revealControls()
+      } else if (fullscreenRef.current === 'player') finishFullscreen()
+    }
+    const onVideoFullscreen = () => {
+      fullscreenRef.current = 'video'
+      setExpanded(true)
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    video?.addEventListener('webkitbeginfullscreen', onVideoFullscreen)
+    video?.addEventListener('webkitendfullscreen', finishFullscreen)
     const main = document.getElementById('main')
     const pauseWhenOutside = () => {
-      if (!section || !main || player?.matches(':modal')) return
+      if (!section || !main || fullscreenRef.current || player?.matches(':modal')) return
       const bounds = section.getBoundingClientRect()
       const viewport = main.getBoundingClientRect()
       // Anchors leave 20px of the previous section visible above the next one.
@@ -75,6 +103,11 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
       main?.removeEventListener('scroll', pauseWhenOutside)
       window.removeEventListener('resize', pauseWhenOutside)
       document.removeEventListener('visibilitychange', pauseWhenHidden)
+      document.removeEventListener('fullscreenchange', onFullscreenChange)
+      video?.removeEventListener('webkitbeginfullscreen', onVideoFullscreen)
+      video?.removeEventListener('webkitendfullscreen', finishFullscreen)
+      if (fullscreenTarget && document.fullscreenElement === fullscreenTarget) void document.exitFullscreen().catch(() => {})
+      if (fullscreenRef.current === 'video') video?.webkitExitFullscreen?.()
       video?.pause()
       player?.close()
     }
@@ -92,17 +125,48 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const expand = () => {
+  const expand = async () => {
     const player = playerRef.current
-    if (!player) return
+    if (!player || fullscreenRef.current) return
+    // Keep desktop's existing modal presentation. Touch devices use real
+    // fullscreen when available, including iPhone's video-specific API.
+    if (window.matchMedia('(max-width: 1000px), (pointer: coarse)').matches) {
+      const video = videoRef.current as FullscreenVideo | null
+      if (video?.webkitEnterFullscreen) {
+        try {
+          fullscreenRef.current = 'video'
+          video.webkitEnterFullscreen()
+          return
+        } catch { fullscreenRef.current = null }
+      }
+      const fullscreenTarget = player.parentElement
+      if (fullscreenTarget?.requestFullscreen) {
+        try {
+          fullscreenRef.current = 'player'
+          await fullscreenTarget.requestFullscreen()
+          return
+        } catch { fullscreenRef.current = null }
+      }
+    }
+    // Embedded browsers may deny native fullscreen; retain the in-page fallback.
+    if (!player.isConnected) return
     player.close()
     player.showModal()
     setExpanded(true)
+    revealControls()
   }
 
   const collapse = () => {
     const player = playerRef.current
     if (!player) return
+    if (fullscreenRef.current === 'video') {
+      (videoRef.current as FullscreenVideo | null)?.webkitExitFullscreen?.()
+      return
+    }
+    if (document.fullscreenElement === player.parentElement) {
+      void document.exitFullscreen().catch(() => setError('暂时无法退出全屏，请使用系统返回按钮。'))
+      return
+    }
     player.close()
     player.show()
     setExpanded(false)
@@ -113,7 +177,7 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
     <div ref={detailRef} className="works-detail works-detail-motion" onKeyDown={event => {
       if (event.key === 'Escape') {
         event.preventDefault()
-        if (playerRef.current?.matches(':modal')) collapse()
+        if (expanded || fullscreenRef.current || playerRef.current?.matches(':modal')) collapse()
         else onClose()
       }
     }}>
@@ -126,7 +190,13 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
       </aside>
       <div className="works-video-layout">
         <div className="works-video-slot">
-          <dialog ref={playerRef} className={`works-video-player${expanded ? ' is-expanded' : ''}${playing ? ' is-playing' : ''}${started ? ' has-started' : ''}${controlsVisible ? ' controls-visible' : ''}`} data-inline-video={expanded ? undefined : 'true'} data-page-scroll="contained" role={expanded ? 'dialog' : 'region'} aria-label="际遇 SHOWREEL 视频播放器" aria-modal={expanded ? true : undefined} onPointerEnter={revealControls} onPointerMove={revealControls} onPointerDown={() => { keyboardRef.current = false; revealControls() }} onPointerLeave={hideControls} onFocusCapture={revealControls} onBlurCapture={revealControls} onCancel={event => { event.preventDefault(); collapse() }} onKeyDown={event => {
+          <dialog ref={playerRef} className={`works-video-player${expanded ? ' is-expanded' : ''}${playing ? ' is-playing' : ''}${started ? ' has-started' : ''}${controlsVisible ? ' controls-visible' : ''}`} data-inline-video={expanded ? undefined : 'true'} data-page-scroll="contained" role={expanded ? 'dialog' : 'region'} aria-label="际遇 SHOWREEL 视频播放器" aria-modal={expanded ? true : undefined} onPointerEnter={event => { if (event.pointerType === 'mouse') revealControls() }} onPointerMove={event => { if (event.pointerType === 'mouse') revealControls() }} onPointerDownCapture={event => {
+            revealOnlyRef.current = event.pointerType !== 'mouse' && playing && !controlsVisible &&
+              event.target instanceof Element && !!event.target.closest('.works-video-toggle')
+            keyboardRef.current = false
+            revealControls()
+          }} onPointerLeave={event => { if (event.pointerType === 'mouse') hideControls() }} onFocusCapture={revealControls} onBlurCapture={revealControls} onCancel={event => { event.preventDefault(); collapse() }} onKeyDown={event => {
+            revealOnlyRef.current = false
             keyboardRef.current = true
             revealControls()
             if ((event.target as HTMLElement).closest('button, input') || event.altKey || event.ctrlKey || event.metaKey) return
@@ -136,7 +206,10 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
             }
           }}>
             <video ref={videoRef} src={`${import.meta.env.BASE_URL}videos/motion-showreel.mp4`} width={1280} height={720} playsInline preload="metadata" aria-label="际遇动态设计作品，时长约 63 秒" onLoadedMetadata={event => setDuration(event.currentTarget.duration)} onDurationChange={event => setDuration(event.currentTarget.duration)} onTimeUpdate={event => setTime(event.currentTarget.currentTime)} onPlay={() => { setPlaying(true); setStarted(true) }} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onError={() => setError('视频加载失败，请刷新页面重试。')} />
-            <button ref={playRef} type="button" className="works-video-toggle" aria-label={playing ? '暂停视频' : '播放视频'} onClick={() => void togglePlayback()}>
+            <button ref={playRef} type="button" className="works-video-toggle" aria-label={playing ? '暂停视频' : '播放视频'} onClick={() => {
+              if (revealOnlyRef.current) { revealOnlyRef.current = false; revealControls(); return }
+              void togglePlayback()
+            }}>
               {playing ? <span className="works-video-pause" aria-hidden="true" /> : <img src={asset('works/motion/play.png')} width={140} height={140} alt="" draggable={false} />}
             </button>
             {expanded && <button type="button" className="works-video-return" onClick={collapse}><img src={asset('works/motion/back.png')} width={68} height={68} alt="" />返回</button>}

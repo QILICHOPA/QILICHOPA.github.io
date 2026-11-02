@@ -192,7 +192,7 @@
 @media (max-width: 1000px) {
   :root {
     --site-nav-padding-top: max(12px, env(safe-area-inset-top, 0px));
-    --site-nav-height: calc(84px + var(--site-nav-padding-top));
+    --site-nav-height: calc(100px + var(--site-nav-padding-top));
   }
 
   .site-header.entry-header {
@@ -203,6 +203,50 @@
   #main {
     padding-bottom: env(safe-area-inset-bottom, 0px);
     scroll-padding-bottom: env(safe-area-inset-bottom, 0px);
+    scroll-padding-top: 0;
+    scroll-snap-type: y mandatory;
+  }
+
+  /* Stop native touch inertia at each screen before starting the next one.
+     Oversized sections still scroll freely within their own snap area. */
+  .opening-sequence::before,
+  .intro-panel,
+  .about-section,
+  #works,
+  #contact {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    scroll-margin-top: 0;
+  }
+
+  /* Snap to the keychain's flow position, not its moving sticky rectangle. */
+  .opening-sequence::before {
+    content: '';
+    display: block;
+  }
+
+  .intro-stage,
+  .about-stage {
+    scroll-margin-top: 0;
+  }
+
+  /* About spans several mobile screens. Keep its reading position tied to
+     native scrolling instead of pinning and scaling the entire text layer. */
+  .opening-sequence.is-motion-ready .intro-panel,
+  .opening-sequence.is-motion-ready .about-section {
+    position: relative;
+    top: auto;
+  }
+
+  .opening-sequence.is-motion-ready .about-layout {
+    transform: none;
+    opacity: 1;
+    filter: none;
+  }
+
+  .opening-sequence.is-motion-ready .about-experience {
+    opacity: 1;
+    transform: none;
   }
 
   .intro-panel .hero {
