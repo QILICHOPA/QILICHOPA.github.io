@@ -169,7 +169,7 @@
       assert('Escape 首次退出放大并保留详情', player()?.open && !player().matches(':modal'))
       player().querySelector('.works-video-toggle').click()
       await until(() => !video.paused)
-      doc().getElementById('playground').scrollIntoView({ behavior: 'instant' })
+      doc().getElementById('contact').scrollIntoView({ behavior: 'instant' })
       await until(() => video.paused)
       assert('离开 Works 后自动暂停', video.paused)
       doc().getElementById('works').scrollIntoView({ behavior: 'instant' })

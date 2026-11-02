@@ -102,8 +102,8 @@
         assert(`${key}: 到底隐藏向下提示`, doc().querySelector('.works-detail-scroll-hint').dataset.visible === 'false')
         assert(`${key}: 图片外滚动仍由主网页接管`, wheel(doc().querySelector('.works-detail-side'), 80))
         await wait(700)
-        const nextTop = main().scrollTop + doc().getElementById('playground').getBoundingClientRect().top - main().getBoundingClientRect().top
-        assert(`${key}: 图片外下滑到下一章节`, Math.abs(main().scrollTop - nextTop) < 2)
+        const nextTop = main().scrollTop + doc().getElementById('contact').getBoundingClientRect().top - main().getBoundingClientRect().top
+        assert(`${key}: 图片外下滑到下一章节`, Math.abs(main().scrollTop - Math.min(nextTop, main().scrollHeight - main().clientHeight)) < 2)
         doc().getElementById('works').scrollIntoView({ behavior: 'instant', block: 'start' })
         assert(`${key}: 离开再回到章节保留图片位置`, gallery().scrollTop > 800)
         await closeDetail()

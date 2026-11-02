@@ -11,7 +11,7 @@ export function useDesktopPageScroll() {
       ['#home', '.opening-pin'],
       ['#intro', '.intro-panel'],
       ['#about', '.about-section'],
-      ...['works', 'playground', 'projects', 'customers', 'contact'].map(id => [`#${id}`, `#${id}`]),
+      ...['works', 'contact'].map(id => [`#${id}`, `#${id}`]),
     ].flatMap(([anchor, content]) => {
       const element = area.querySelector<HTMLElement>(anchor)
       const panel = area.querySelector<HTMLElement>(content)

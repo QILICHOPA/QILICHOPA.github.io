@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import type { CSSProperties, MouseEvent } from 'react'
+import type { CSSProperties } from 'react'
 import './KeychainHero.css'
 
 type CutoutAsset = {
@@ -84,27 +83,12 @@ function Cutout({ asset, priority = false }: { asset: CutoutAsset; priority?: bo
   )
 }
 
-function nudge(event: MouseEvent<HTMLButtonElement>) {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  const swing = event.currentTarget.closest('.keychain-charm')?.querySelector('.charm-swing')
-  swing?.getAnimations().forEach((animation) => animation.cancel())
-  swing?.animate([
-    { transform: 'rotate(0deg)' },
-    { transform: 'rotate(-7deg)', offset: 0.18 },
-    { transform: 'rotate(5deg)', offset: 0.4 },
-    { transform: 'rotate(-2deg)', offset: 0.65 },
-    { transform: 'rotate(0deg)' },
-  ], { duration: 1400, easing: 'ease-in-out' })
-}
-
 export function KeychainHero() {
-  const [active, setActive] = useState<string | null>(null)
-
   return (
     <section className="keychain-hero" aria-labelledby="keychain-title">
       <div className="keychain-scene">
         <p className="keychain-side-note"><span>A COLLECTION OF VISUAL WORKS</span></p>
-        <div className="keychain-art" role="group" aria-label="由金属扣与五个设计挂件组成的钥匙串，点击挂件可轻轻拨动，爱心通往联系方式">
+        <div className="keychain-art" role="group" aria-label="由金属扣与五个设计挂件组成的钥匙串">
           <div className="keychain-rig">
           <div className="keychain-clasp" aria-hidden="true"><Cutout asset={clasp} priority /></div>
           {charms.map((charm, index) => {
@@ -122,25 +106,13 @@ export function KeychainHero() {
               '--charm-layer': charm.layer,
               '--charm-shape': charm.silhouette,
             } as CSSProperties
-            const interaction = {
-              onPointerEnter: () => setActive(charm.id),
-              onPointerLeave: () => setActive(null),
-              onFocus: () => setActive(charm.id),
-              onBlur: () => setActive(null),
-            }
             return (
-              <div key={charm.id} className={`keychain-charm charm-${charm.id}${active === charm.id ? ' is-active' : ''}`} style={style}>
+              <div key={charm.id} className={`keychain-charm charm-${charm.id}`} style={style}>
                 <span className="charm-swing">
                   <span className="charm-idle">
-                  {charm.id === 'heart' ? (
-                    <a className="charm-control" href="#contact" aria-label="紫色爱心：与我联系" {...interaction}>
+                    <span className="charm-control" role="img" aria-label={charm.label}>
                       <Cutout asset={charm} />
-                    </a>
-                  ) : (
-                    <button className="charm-control" type="button" aria-label={`轻拨${charm.label}挂件`} {...interaction} onClick={(event) => { setActive(charm.id); nudge(event) }}>
-                      <Cutout asset={charm} />
-                    </button>
-                  )}
+                    </span>
                   </span>
                 </span>
               </div>
@@ -150,6 +122,11 @@ export function KeychainHero() {
         </div>
         <p className="keychain-edition"><span>2024  — 2026</span></p>
       </div>
+      <a className="keychain-scroll-cue" href="#intro" aria-label="前往下一屏：个人介绍">
+        <svg viewBox="0 0 32 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M16 7v24M7 22l9 9 9-9" />
+        </svg>
+      </a>
     </section>
   )
 }

@@ -288,3 +288,137 @@
     --label-left: 6vw;
   }
 }
+
+/* Phones use the folders as a vertical index, with room to read each cover. */
+@media (max-width: 600px) {
+  .works-section {
+    height: auto;
+    min-height: calc(100svh - var(--site-nav-height));
+  }
+
+  .works-folders {
+    height: auto;
+    padding: 28px 20px 40px;
+  }
+
+  .works-folders:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .works-section .works-folder {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    isolation: isolate;
+    transform: none;
+  }
+
+  .opening-sequence.is-motion-ready .works-section .works-folder {
+    transform: none;
+  }
+
+  .works-folder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 12px;
+    background: #202024;
+    clip-path: polygon(0 0, 44% 0, 50% 16px, 100% 16px, 100% 100%, 0 100%);
+    transition: background-color .25s ease;
+  }
+
+  .works-folder-pad { --mobile-folder-color: #fa83ff; }
+  .works-folder-mobile { --mobile-folder-color: #bc9bff; }
+  .works-folder-web { --mobile-folder-color: #55bcff; }
+  .works-folder-motion { --mobile-folder-color: #d174ff; }
+
+  .works-folder.is-expanded::before {
+    background: var(--mobile-folder-color);
+  }
+
+  .works-folder > img {
+    display: none;
+  }
+
+  .works-folder h2 {
+    order: -1;
+    color: #e7e5ec;
+    font-size: 26px;
+  }
+
+  .works-folder-toggle {
+    position: relative;
+    inset: auto;
+    align-items: center;
+    width: 100%;
+    min-height: 88px;
+    padding: 30px 20px 20px;
+    gap: 10px;
+    clip-path: none;
+  }
+
+  .works-folder-toggle span {
+    font-size: 18px;
+    opacity: .6;
+  }
+
+  .works-folder-toggle::after {
+    content: '+';
+    margin-left: auto;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 26px;
+    font-weight: 400;
+    transition: transform .25s ease;
+  }
+
+  .works-folder.is-expanded .works-folder-toggle::after {
+    transform: rotate(45deg);
+  }
+
+  .works-previews {
+    position: relative;
+    inset: auto;
+    z-index: 3;
+    display: none;
+    gap: 8px;
+    padding: 0 16px 20px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: #0005 transparent;
+  }
+
+  .works-folder.is-expanded .works-previews {
+    display: flex;
+    pointer-events: auto;
+  }
+
+  .works-section .works-preview {
+    position: relative;
+    inset: auto;
+    flex: 0 0 82%;
+    align-self: flex-start;
+    width: 82%;
+    max-width: 300px;
+    height: auto;
+    margin: 0;
+    scroll-snap-align: start;
+    transform: none;
+  }
+
+  .works-section .works-folder.is-expanded .works-preview {
+    transform: none;
+  }
+
+  .works-preview:only-child {
+    margin-inline: auto;
+  }
+}

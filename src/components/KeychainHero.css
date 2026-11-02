@@ -124,10 +124,6 @@
   pointer-events: none;
 }
 
-.keychain-art:focus-within .keychain-charm {
-  transform: rotate(calc(var(--charm-angle) + var(--charm-spread) * var(--charm-spread-scale)));
-}
-
 .charm-swing {
   display: block;
   transform-origin: var(--charm-origin);
@@ -148,7 +144,7 @@
   border: 0;
   background: transparent;
   pointer-events: none;
-  cursor: pointer;
+  cursor: default;
   -webkit-user-select: none;
   user-select: none;
   transition: filter .3s;
@@ -163,12 +159,8 @@
   pointer-events: auto;
 }
 
-.keychain-charm.is-active .charm-control {
+.charm-control:hover {
   filter: brightness(1.13);
-}
-
-.keychain-charm:focus-within .charm-control {
-  outline: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -293,6 +285,49 @@
 .keychain-scroll:hover .keychain-scroll-arrow {
   transform: translateY(4px);
   color: #ffdf26;
+}
+
+.keychain-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 4svh, 40px);
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: #b9b9b9;
+  transform: translateX(-50%);
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.keychain-scroll-cue:hover,
+.keychain-scroll-cue:focus-visible {
+  color: #fff;
+}
+
+.keychain-scroll-cue:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+.keychain-scroll-cue svg {
+  display: block;
+  width: 32px;
+  height: 40px;
+  animation: keychain-scroll-float 2.8s ease-in-out infinite;
+}
+
+@keyframes keychain-scroll-float {
+  0%,
+  100% {
+    transform: translateY(-3px);
+  }
+
+  50% {
+    transform: translateY(3px);
+  }
 }
 
 @keyframes keychain-reveal {

@@ -1,0 +1,149 @@
+.contact-permit-section {
+  position: relative;
+  height: calc(100svh - var(--site-nav-height));
+  min-height: 0;
+  overflow: clip;
+  background: #000;
+  scroll-margin-top: -20px;
+}
+
+.contact-accessible-copy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.contact-folder {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  opacity: .7;
+  transform: translateX(-50%);
+  user-select: none;
+  pointer-events: none;
+}
+
+.contact-badge-layer {
+  --badge-width: min(45.3vw, 80.5svh, 870px);
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  overflow: clip;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.contact-badge-layer.is-visible {
+  visibility: visible;
+}
+
+.contact-badge-hanger {
+  position: absolute;
+  top: 0;
+  left: 48.4%;
+  width: var(--badge-width);
+  transform: translateX(-50%);
+}
+
+.contact-badge-swing {
+  width: 100%;
+  transform-origin: 50% 0;
+}
+
+.contact-badge-layer.is-visible .contact-badge-swing {
+  animation: contact-badge-arrive 3.2s .05s ease-in-out both;
+  will-change: transform;
+}
+
+.contact-badge-image {
+  position: relative;
+  /* Shorten the visible strap without modifying the supplied cutout. The
+     hanger itself still rotates around y=0, at the top of the viewport. */
+  top: calc(var(--badge-width) * -.317);
+  width: 100%;
+  max-width: none;
+  height: auto;
+  user-select: none;
+}
+
+@keyframes contact-badge-arrive {
+  0% { transform: rotate(-100deg); }
+  26% { transform: rotate(20deg); }
+  45% { transform: rotate(-11deg); }
+  62% { transform: rotate(5.5deg); }
+  77% { transform: rotate(-2.5deg); }
+  89% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@media (max-width: 1000px) {
+  .contact-badge-layer {
+    --badge-width: min(110vw, 80.5svh);
+  }
+
+  .contact-folder {
+    width: max(100%, 130svh);
+  }
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .contact-badge-layer {
+    --badge-width: min(150vw, 86svh);
+  }
+
+  .contact-badge-hanger {
+    left: 50%;
+  }
+
+  .contact-folder {
+    width: max(100%, 150svh);
+  }
+}
+
+@media (max-width: 600px) {
+  .contact-badge-layer {
+    --badge-width: min(142vw, calc((100svh - var(--site-nav-height) - 40px) / 1.11));
+    top: var(--site-nav-height);
+  }
+
+  .contact-badge-hanger {
+    left: 50%;
+  }
+
+  .contact-badge-image {
+    top: calc(var(--badge-width) * -.39);
+  }
+
+  .contact-badge-layer.is-visible .contact-badge-swing {
+    animation: contact-badge-arrive-mobile 1.4s ease-out both;
+  }
+
+  .contact-folder {
+    bottom: -12px;
+    width: max(100%, 65svh);
+    opacity: .45;
+  }
+
+  @keyframes contact-badge-arrive-mobile {
+    0% { transform: translateY(-16px) rotate(-12deg); opacity: 0; }
+    40% { transform: translateY(0) rotate(4deg); opacity: 1; }
+    65% { transform: rotate(-2deg); }
+    85% { transform: rotate(.8deg); }
+    100% { transform: rotate(0deg); opacity: 1; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-badge-layer.is-visible .contact-badge-swing {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+}

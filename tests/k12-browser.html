@@ -79,8 +79,8 @@
       assert('最后一张图片完整显示在粉色边缘上方', lastBottom <= edgeTop + 2)
       assert('在图片外滚动由网页翻屏接管', wheel(doc().querySelector('.works-detail-side'), 80))
       await wait(700)
-      const playgroundTop = main().scrollTop + doc().getElementById('playground').getBoundingClientRect().top - main().getBoundingClientRect().top
-      assert('图片外下滑对齐网页下一章节', Math.abs(main().scrollTop - playgroundTop) < 2)
+      const contactTop = main().scrollTop + doc().getElementById('contact').getBoundingClientRect().top - main().getBoundingClientRect().top
+      assert('图片外下滑对齐网页下一章节', Math.abs(main().scrollTop - Math.min(contactTop, main().scrollHeight - main().clientHeight)) < 2)
       assert('返回时保留图片浏览位置', gallery().scrollTop > 800)
       doc().querySelector('.works-detail-back').click()
       await wait(50)

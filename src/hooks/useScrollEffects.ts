@@ -22,7 +22,6 @@ export function useScrollEffects() {
       document.querySelectorAll('.reveal').forEach((element) => observer.observe(element))
       document.documentElement.classList.add('motion-ready')
 
-      const cards = Array.from(document.querySelectorAll<HTMLElement>('.stack-card'))
       const opening = document.querySelector<HTMLElement>('.opening-sequence')
       const intro = document.getElementById('intro')
       const introPanel = document.querySelector<HTMLElement>('.intro-panel')
@@ -84,12 +83,6 @@ export function useScrollEffects() {
             lastWorksProgress = progress
           }
         }
-        const startAt = viewportTop + viewportHeight * 0.7
-        cards.forEach((card, index) => {
-          const next = cards[index + 1]
-          const progress = next ? Math.min(1, Math.max(0, (startAt - next.getBoundingClientRect().top) / Math.max(1, startAt - viewportTop - 130))) : 0
-          card.style.setProperty('--stack-progress', String(progress))
-        })
         frame = 0
       }
       const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
@@ -110,7 +103,6 @@ export function useScrollEffects() {
         for (const property of ['--opening-progress', '--intro-title-progress', '--intro-avatar-progress', '--intro-copy-progress', '--about-progress', '--about-title-progress', '--about-portrait-progress', '--about-copy-progress', '--works-progress', '--works-pad-progress', '--works-mobile-progress', '--works-web-progress', '--works-motion-progress']) {
           opening?.style.removeProperty(property)
         }
-        cards.forEach((card) => card.style.removeProperty('--stack-progress'))
       }
     }
 

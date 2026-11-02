@@ -229,3 +229,23 @@
   .works-video-controls { gap: 8px; padding-inline: 10px; }
   .works-video-expand { width: 36px; height: 44px; padding: 6px; }
 }
+
+@media (max-width: 600px) {
+  .works-detail-motion {
+    --detail-edge-height: 30px;
+  }
+
+  .works-video-layout {
+    inset: 76px 12px 64px;
+  }
+
+  .works-video-player:not(.is-expanded) {
+    top: 50%;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+  }
+
+  .works-video-copyright {
+    inset-inline: 12px;
+  }
+}
