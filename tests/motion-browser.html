@@ -42,11 +42,11 @@
     preview.style.height = `${height}px`
     preview.style.transform = `scale(${Math.min(1, (innerWidth - 32) / width)})`
   }
-  async function open() {
+  async function open(key = 'motion-showreel') {
     if (player()) return
     if (!doc().querySelector('.works-folder-motion.is-expanded')) doc().querySelector('.works-folder-motion .works-folder-toggle').click()
     await wait(800)
-    doc().getElementById('open-motion-showreel').click()
+    doc().getElementById(`open-${key}`).click()
     await until(() => player()?.open)
   }
   const wheel = target => {
@@ -140,7 +140,7 @@
       await open()
       const video = player().querySelector('video')
       await until(() => video.readyState >= 1)
-      assert('04 保留两张卡片，其中 SHOWREEL 为视频入口', doc().querySelectorAll('#motion-previews .works-preview').length === 2 && doc().querySelectorAll('#motion-previews button').length === 1 && doc().querySelector('.works-preview-motion-compilation'))
+      assert('04 两张卡片均为独立的视频入口', doc().querySelectorAll('#motion-previews .works-preview').length === 2 && doc().querySelectorAll('#motion-previews button').length === 2 && doc().getElementById('open-motion-compilation'))
       assert('视频元数据正确且默认不自动播放', video.videoWidth === 1280 && video.videoHeight === 720 && Math.abs(video.duration - 63.04) < 1 && video.paused)
       const controls = player().querySelector('.works-video-controls')
       const controlsStyle = () => win().getComputedStyle(controls)
@@ -288,8 +288,34 @@
       player().dispatchEvent(new (win().KeyboardEvent)('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
       await wait(50)
       assert('普通模式 Escape 返回文件夹', !player() && doc().querySelector('.works-folder-motion.is-expanded'))
+      await open('motion-compilation')
+      const compilation = player().querySelector('video')
+      await until(() => compilation.readyState >= 1)
+      assert('英小伴卡片打开附件视频并保持独立的初始状态', compilation.src.endsWith('/motion-compilation.mp4') && compilation.videoWidth === 1938 && compilation.videoHeight === 1680 && Math.abs(compilation.duration - 81.85) < 1 && compilation.currentTime === 0 && compilation.paused && player().getAttribute('aria-label') === '英小伴动效合集 视频播放器')
+      for (const [width, height] of [[1366, 768], [390, 844]]) {
+        fit(width, height)
+        await wait(100)
+        const rect = compilation.getBoundingClientRect()
+        assert(`${width}px 英小伴复用 16:9 播放器并完整容纳原始画面`, rect.width > 0 && Math.abs(rect.width / rect.height - 16 / 9) < .01 && win().getComputedStyle(compilation).objectFit === 'contain' && doc().getElementById('main').scrollWidth <= width)
+      }
+      fit(1366, 768)
+      await wait(100)
+      player().querySelector('.works-video-toggle').click()
+      await until(() => compilation.currentTime > .1)
+      assert('英小伴视频正常播放', !compilation.paused && player().classList.contains('is-playing'))
+      player().querySelector('.works-video-expand').click()
+      await wait(100)
+      assert('英小伴放大保持播放及同一视频节点', player().matches(':modal') && !compilation.paused && player().querySelector('video') === compilation)
+      player().querySelector('.works-video-return').click()
+      await wait(50)
+      doc().querySelector('.works-detail-back').click()
+      await wait(50)
+      assert('英小伴返回后暂停并恢复第二张卡片焦点', !player() && compilation.paused && doc().activeElement.id === 'open-motion-compilation')
+      await open()
+      assert('切回 SHOWREEL 使用原视频且从头开始', player().querySelector('video').src.endsWith('/motion-showreel.mp4') && player().querySelector('video').currentTime === 0 && !player().classList.contains('has-started'))
+      doc().querySelector('.works-detail-back').click()
       lines.push('ALL CHECKS PASSED')
-      status.textContent = '全部通过：触摸唤出、手机全屏接口与回退、桌面交互、8 种尺寸、播放进度'
+      status.textContent = '全部通过：两张视频卡片、触摸唤出、手机全屏接口与回退、桌面交互、8 种尺寸、播放进度'
     } catch (error) {
       lines.push(`ERROR: ${error.message}`)
       status.textContent = `检查失败：${error.message}；上一项：${lines.at(-2) ?? '尚无结果'}`

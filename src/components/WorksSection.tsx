@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { asset } from '../data/portfolio'
 import { hasWorksDetail } from '../data/worksDetails'
 import type { WorksDetailKey } from '../data/worksDetails'
+import { hasWorksVideo } from '../data/worksVideos'
+import type { WorksVideoKey } from '../data/worksVideos'
 import { WorksProjectDetail } from './WorksProjectDetail'
 import { WorksVideoDetail } from './WorksVideoDetail'
 import './WorksSection.css'
@@ -31,13 +33,13 @@ const folders = [
     name: 'MOTION', key: 'motion', width: 1918, height: 554,
     previews: [
       { key: 'motion-showreel', alt: '际遇SHOWREEL：动态视频', width: 813, height: 1009 },
-      { key: 'motion-compilation', alt: '英小伴动效合集：还没放图', width: 899, height: 1070 },
+      { key: 'motion-compilation', alt: '英小伴动效合集：动态视频', width: 899, height: 1070 },
     ],
   },
 ] as const
 
-type DetailKey = WorksDetailKey | 'motion-showreel'
-const hasDetail = (key: string): key is DetailKey => key === 'motion-showreel' || hasWorksDetail(key)
+type DetailKey = WorksDetailKey | WorksVideoKey
+const hasDetail = (key: string): key is DetailKey => hasWorksVideo(key) || hasWorksDetail(key)
 
 export function WorksSection() {
   const [expandedFolder, setExpandedFolder] = useState<typeof folders[number]['key'] | null>(null)
@@ -51,7 +53,7 @@ export function WorksSection() {
 
   return (
     <section id="works" className="works-section" aria-label="Works 作品分类">
-      {selectedProject === 'motion-showreel' ? <WorksVideoDetail onClose={closeDetail} /> : selectedProject && <WorksProjectDetail key={selectedProject} projectKey={selectedProject} onClose={closeDetail} />}
+      {selectedProject && (hasWorksVideo(selectedProject) ? <WorksVideoDetail key={selectedProject} videoKey={selectedProject} onClose={closeDetail} /> : <WorksProjectDetail key={selectedProject} projectKey={selectedProject} onClose={closeDetail} />)}
       <div className="works-folders" hidden={selectedProject !== null}>
         {folders.map(({ name, key, width, height, previews }, index) => (
           <article className={`works-folder works-folder-${key}${expandedFolder === key ? ' is-expanded' : ''}`} key={key}>

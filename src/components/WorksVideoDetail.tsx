@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { asset } from '../data/portfolio'
+import { worksVideos } from '../data/worksVideos'
+import type { WorksVideoKey } from '../data/worksVideos'
 import './WorksProjectDetail.css'
 import './WorksVideoDetail.css'
 
@@ -13,7 +15,8 @@ const formatTime = (seconds: number) => {
   return `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`
 }
 
-export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
+export function WorksVideoDetail({ videoKey, onClose }: { videoKey: WorksVideoKey; onClose: () => void }) {
+  const project = worksVideos[videoKey]
   const detailRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<HTMLDialogElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -190,7 +193,7 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
       </aside>
       <div className="works-video-layout">
         <div className="works-video-slot">
-          <dialog ref={playerRef} className={`works-video-player${expanded ? ' is-expanded' : ''}${playing ? ' is-playing' : ''}${started ? ' has-started' : ''}${controlsVisible ? ' controls-visible' : ''}`} data-inline-video={expanded ? undefined : 'true'} data-page-scroll="contained" role={expanded ? 'dialog' : 'region'} aria-label="际遇 SHOWREEL 视频播放器" aria-modal={expanded ? true : undefined} onPointerEnter={event => { if (event.pointerType === 'mouse') revealControls() }} onPointerMove={event => { if (event.pointerType === 'mouse') revealControls() }} onPointerDownCapture={event => {
+          <dialog ref={playerRef} className={`works-video-player${expanded ? ' is-expanded' : ''}${playing ? ' is-playing' : ''}${started ? ' has-started' : ''}${controlsVisible ? ' controls-visible' : ''}`} data-inline-video={expanded ? undefined : 'true'} data-page-scroll="contained" role={expanded ? 'dialog' : 'region'} aria-label={`${project.title} 视频播放器`} aria-modal={expanded ? true : undefined} onPointerEnter={event => { if (event.pointerType === 'mouse') revealControls() }} onPointerMove={event => { if (event.pointerType === 'mouse') revealControls() }} onPointerDownCapture={event => {
             revealOnlyRef.current = event.pointerType !== 'mouse' && playing && !controlsVisible &&
               event.target instanceof Element && !!event.target.closest('.works-video-toggle')
             keyboardRef.current = false
@@ -205,7 +208,7 @@ export function WorksVideoDetail({ onClose }: { onClose: () => void }) {
               void togglePlayback()
             }
           }}>
-            <video ref={videoRef} src={`${import.meta.env.BASE_URL}videos/motion-showreel.mp4`} width={1280} height={720} playsInline preload="metadata" aria-label="际遇动态设计作品，时长约 63 秒" onLoadedMetadata={event => setDuration(event.currentTarget.duration)} onDurationChange={event => setDuration(event.currentTarget.duration)} onTimeUpdate={event => setTime(event.currentTarget.currentTime)} onPlay={() => { setPlaying(true); setStarted(true) }} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onError={() => setError('视频加载失败，请刷新页面重试。')} />
+            <video ref={videoRef} src={`${import.meta.env.BASE_URL}videos/${project.file}`} width={project.width} height={project.height} playsInline preload="metadata" aria-label={project.description} onLoadedMetadata={event => setDuration(event.currentTarget.duration)} onDurationChange={event => setDuration(event.currentTarget.duration)} onTimeUpdate={event => setTime(event.currentTarget.currentTime)} onPlay={() => { setPlaying(true); setStarted(true) }} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onError={() => setError('视频加载失败，请刷新页面重试。')} />
             <button ref={playRef} type="button" className="works-video-toggle" aria-label={playing ? '暂停视频' : '播放视频'} onClick={() => {
               if (revealOnlyRef.current) { revealOnlyRef.current = false; revealControls(); return }
               void togglePlayback()
