@@ -404,8 +404,15 @@
     width: 100%;
     max-width: none;
     height: auto;
+    aspect-ratio: 4 / 5;
     margin: 0;
     transform: none;
+  }
+
+  .works-preview-link img {
+    height: 100%;
+    object-fit: contain;
+    object-position: top;
   }
 
   .works-section .works-folder.is-expanded .works-preview {
@@ -414,7 +421,7 @@
 
   .works-preview:only-child {
     grid-column: 1 / -1;
-    width: min(100%, 260px);
+    width: calc((100% - 6px) / 2);
     margin-inline: auto;
   }
 }
